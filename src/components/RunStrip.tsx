@@ -5,7 +5,7 @@ import type { Screen } from '../lib/game';
 export function RunStrip({ results, screen }: { results: Record<string, boolean>; screen: Screen }) {
   const cur = screen.t === 'play' || screen.t === 'feedback' ? `${screen.li}-${screen.ii}` : screen.t === 'level' ? `${screen.li}-0` : null;
   return (
-    <div className="strip" aria-label="Progress">
+    <div className="strip" aria-label="Progress" role="img">
       {LEVELS.map((l, li) => (
         <div className="strip-seg" key={l.id}>
           {l.items.map((_, ii) => {

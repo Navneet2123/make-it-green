@@ -63,6 +63,27 @@ correct and wrong paths), visual review on a 390px-wide viewport, production bui
 - README documents setup, play, content editing (all questions live in `src/lib/content.ts`).
 - Published as an open GitHub repository.
 
-## 4. Iteration log
+## 4. Human review (separate reviewer, zero prior knowledge)
+
+A second, independent agent played the game end to end on a 390×844 phone viewport as
+**"Priya, 29, marketing, has never heard the phrase test automation"**, deliberately making
+mistakes, and wrote a structured review. Scores before fixes: **beauty 6/10, clarity 7/10**.
+In her own words afterwards she could explain automation, script, locator, assertion and
+debugging — the learning goal held. Her top findings and what changed:
+
+| Finding | Change |
+| --- | --- |
+| "PASS/FAIL" used for both *me* and *the robot's check* on the same screen (Level 4, 5) | Verdict is now **"✓ You got it" / "✗ Not quite"**; PASS/FAIL is reserved for the robot's test. Judge buttons say "It passes / It fails". |
+| Header overflows at 390px: sound button cut in half, pills touch the top edge | Compact strip (smaller dots, shrinkable), safe-area top padding, fixed-size buttons, file name truncates instead of wrapping. |
+| Level 2 says "Correct order shown in green" but shows *my* order | On a miss the real order is listed in a green box; caption only appears when everything is right. |
+| No way to undo a placed step | ✕ on each placed step plus "Tap a placed step to put it back." |
+| "XPath", "element", "tag", "string" unexplained before being asked | Prompts now teach first, ask second ("Read it left to right: // = anywhere…"); "element" → "button or box"; "string" → "word"; inspector bar labelled **tag**. |
+| One slip = hard FAIL, "the least Duolingo-like thing here" | One free retry with a specific nudge ("Close! One step is out of place…"). Retried passes earn 5 XP and do not extend the streak. |
+| Level 5 wrong answer showed a green "✓ 5 passed" under a red verdict | Wrong fix now stays red with "Still red. Correct fix: …"; only the right fix turns the line green. |
+| Report felt like a bad school report; copied text had no link | Headline is "10 of 14 green", partial levels show ◐ in yellow, kinder copy, share text includes the play link. |
+| Result sheet covered content / clipped text | Sheet scrolls if tall, page gets bottom padding while a sheet is open, long text wraps. |
+
+## 5. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
+- v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.

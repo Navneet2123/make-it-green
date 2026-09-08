@@ -56,7 +56,9 @@ Open **http://localhost:5174** and press **▶ Start the run**.
 ## How to play
 
 Tap. That's it. Each level has two to four tests. Press **Run test** to check your answer, read the
-one-line explanation, press **Continue** (or **Enter**).
+one-line explanation, press **Continue** (or **Enter**). Get one wrong and you get a nudge and a
+second try; the verdict says **You got it** or **Not quite**, while PASS and FAIL are reserved for
+what the robot's own check would say.
 
 | Level | You do | You learn |
 | --- | --- | --- |
@@ -66,7 +68,7 @@ one-line explanation, press **Continue** (or **Enter**).
 | 4 · Pass or fail | Judge expected vs actual, fast | **Assertion** |
 | 5 · Fix the bug | Read the failing run and pick the fix | **Debugging** |
 
-You earn 10 XP per passing test, +5 while on a streak of three or more. The report gives you a rank
+You earn 10 XP per test you get right first time (5 after a retry), +5 while on a streak of three or more. The report gives you a rank
 from *Curious Human* to *Green Suite Legend*, and **Copy result** puts a text summary on your clipboard.
 
 ---
@@ -117,7 +119,8 @@ Stack: Vite, React 18, TypeScript, framer-motion. No backend.
 - Chunky tactile controls with hard shadows that press down. One entrance animation per screen, a
   bounce on PASS, a shake on FAIL, confetti on a good report. Reduced-motion is respected.
 
-See [docs/AI-DLC.md](docs/AI-DLC.md) for the full brief and the development life cycle.
+See [docs/AI-DLC.md](docs/AI-DLC.md) for the full brief, the development life cycle, and the
+independent zero-knowledge playtest review that shaped v1.1.
 
 ## Deploy
 

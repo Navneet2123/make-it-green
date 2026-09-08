@@ -19,7 +19,7 @@ export interface GameState {
 
 export const initial: GameState = { screen: { t: 'intro' }, results: {}, streak: 0, bestStreak: 0, xp: 0, startedAt: null, finishedAt: null };
 
-export type Action = { type: 'start' } | { type: 'beginLevel' } | { type: 'answer'; pass: boolean } | { type: 'continue' } | { type: 'reset' };
+export type Action = { type: 'start' } | { type: 'beginLevel' } | { type: 'answer'; pass: boolean; retried?: boolean } | { type: 'continue' } | { type: 'reset' };
 
 export function reduce(s: GameState, a: Action): GameState {
   switch (a.type) {
@@ -28,8 +28,8 @@ export function reduce(s: GameState, a: Action): GameState {
     case 'answer': {
       if (s.screen.t !== 'play') return s;
       const { li, ii } = s.screen;
-      const streak = a.pass ? s.streak + 1 : 0;
-      const gained = a.pass ? 10 + (streak >= 3 ? 5 : 0) : 0;
+      const streak = a.pass && !a.retried ? s.streak + 1 : 0;
+      const gained = a.pass ? (a.retried ? 5 : 10 + (streak >= 3 ? 5 : 0)) : 0;
       return { ...s, results: { ...s.results, [`${li}-${ii}`]: a.pass }, streak, bestStreak: Math.max(s.bestStreak, streak), xp: s.xp + gained, screen: { t: 'feedback', li, ii, pass: a.pass } };
     }
     case 'continue': {

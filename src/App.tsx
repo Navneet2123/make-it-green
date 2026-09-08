@@ -19,6 +19,7 @@ export default function App() {
   const [muted, setMutedState] = useState(isMuted());
   const toggleMute = () => { setMuted(!muted); setMutedState(!muted); };
   const inRun = s.screen.t !== 'intro' && s.screen.t !== 'report';
+  useEffect(() => { document.body.classList.toggle('has-sheet', s.screen.t === 'feedback'); }, [s.screen.t]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Enter' && s.screen.t === 'feedback') dispatch({ type: 'continue' }); if (e.key === 'Enter' && s.screen.t === 'level') dispatch({ type: 'beginLevel' }); };
@@ -41,7 +42,7 @@ export default function App() {
           {(s.screen.t === 'play' || s.screen.t === 'feedback') && (
             <motion.section key={`play-${s.screen.li}-${s.screen.ii}`} {...slide}>
               <Play li={s.screen.li} ii={s.screen.ii} locked={s.screen.t === 'feedback'} streak={s.streak}
-                onSubmit={(pass) => { pass ? sfx.pass() : sfx.fail(); dispatch({ type: 'answer', pass }); }} />
+                onSubmit={(pass, retried) => { pass ? sfx.pass() : sfx.fail(); dispatch({ type: 'answer', pass, retried }); }} />
             </motion.section>
           )}
           {s.screen.t === 'report' && <motion.section key="report" {...slide}><Report state={s} onReplay={() => dispatch({ type: 'reset' })} /></motion.section>}
@@ -60,17 +61,16 @@ export default function App() {
 function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="intro">
-      <div className="intro-run mono">
-        <span className="dot pass" /><span className="dot pass" /><span className="dot fail" /><span className="dot pass" /><span className="dot cur" /><span className="dot" /><span className="dot" />
-      </div>
+      <div className="eyebrow mono">a 5-minute game about test automation</div>
       <h1>Make it <span className="green">green</span>.</h1>
       <p className="lede">Five tiny levels. Five minutes. You'll walk away knowing what test automation actually is.</p>
       <ul className="intro-levels">
         {LEVELS.map((l, i) => (
-          <li key={l.id}><span className="lvl-dot" style={{ background: l.color }} /><span className="lvl-name">{l.title}</span><span className="lvl-concept">{l.concept}</span><span className="lvl-n mono">{i + 1}</span></li>
+          <li key={l.id}><span className="lvl-n mono">{i + 1}</span><span className="lvl-name">{l.title}</span><span className="lvl-concept" style={{ color: l.color }}>{l.items.length} tests</span></li>
         ))}
       </ul>
-      <button className="btn primary big" onClick={onStart}>▶ Start the run</button>
+      <p className="fine left">Every answer is a test. Make all {TOTAL_TESTS} of them go green.</p>
+      <button className="btn primary big" onClick={onStart}>▶ Start</button>
       <p className="fine">No sign-up. Works on your phone. Sound on is nicer.</p>
     </div>
   );
@@ -90,7 +90,7 @@ function LevelIntro({ li, onBegin }: { li: number; onBegin: () => void }) {
   );
 }
 
-function Play({ li, ii, locked, streak, onSubmit }: { li: number; ii: number; locked: boolean; streak: number; onSubmit: (p: boolean) => void }) {
+function Play({ li, ii, locked, streak, onSubmit }: { li: number; ii: number; locked: boolean; streak: number; onSubmit: (p: boolean, retried: boolean) => void }) {
   const l = LEVELS[li];
   const item = l.items[ii];
   return (
@@ -111,9 +111,9 @@ function Feedback({ li, ii, pass, streak, last, onContinue }: { li: number; ii: 
     <motion.div className={`sheet ${pass ? 'sheet-pass' : 'sheet-fail'}`} initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 160, opacity: 0, transition: { duration: 0.16 } }} transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
       <div className="sheet-inner">
         <motion.div className="verdict" initial={{ scale: 0.6 }} animate={pass ? { scale: [0.6, 1.15, 1] } : { x: [0, -8, 8, -6, 6, 0], scale: 1 }} transition={{ duration: 0.45 }}>
-          {pass ? '✓ PASS' : '✗ FAIL'}
+          {pass ? '✓ You got it' : '✗ Not quite'}
         </motion.div>
-        {pass && streak >= 3 && <div className="bonus">+5 streak bonus</div>}
+        {pass && streak >= 3 && <div className="bonus">🔥 +5 streak bonus</div>}
         <p className="explain">{item.explain}</p>
         <button className={`btn big ${pass ? 'on-pass' : 'on-fail'}`} onClick={onContinue} autoFocus>{last ? 'See my report' : 'Continue'} <span className="mono kbd">↵</span></button>
       </div>
@@ -129,13 +129,14 @@ function Report({ state, onReplay }: { state: ReturnType<typeof reduce>; onRepla
   const [copied, setCopied] = useState(false);
   useEffect(() => { sfx.report(); }, []);
   const perLevel = LEVELS.map((l, li) => ({ l, ok: l.items.filter((_, ii) => state.results[`${li}-${ii}`]).length }));
-  const share = useMemo(() => `Make It Green — ${passed}/${TOTAL_TESTS} tests passed in ${time} · ${rank.name}\n` + perLevel.map((p) => `${p.ok === p.l.items.length ? '✓' : '✗'} ${p.l.file} ${p.ok}/${p.l.items.length}`).join('\n'), [passed, time, rank, perLevel]);
+  const share = useMemo(() => `🟢 Make It Green — ${passed}/${TOTAL_TESTS} tests green in ${time} · ${rank.name}\n` + perLevel.map((p) => `${p.ok === p.l.items.length ? '✓' : p.ok === 0 ? '✗' : '◐'} ${p.l.file} ${p.ok}/${p.l.items.length}`).join('\n') + `\nPlay it (5 min): ${location.origin}${location.pathname}`, [passed, time, rank, perLevel]);
   const copy = async () => { try { await navigator.clipboard.writeText(share); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} };
   return (
     <div className="report">
       {ratio >= 0.8 && <Confetti />}
       <div className="eyebrow mono">test report</div>
-      <h2>{passed === TOTAL_TESTS ? 'All green.' : passed >= TOTAL_TESTS * 0.8 ? 'Mostly green.' : 'You learned something.'}</h2>
+      <h2 className="report-h"><span className="green">{passed}</span><span className="of"> of {TOTAL_TESTS}</span> green.</h2>
+      <p className="report-sub">{passed === TOTAL_TESTS ? 'A perfect first run. Sam would hire you.' : passed >= TOTAL_TESTS * 0.8 ? 'A strong run. The red ones are the lessons you will remember.' : 'Red is not a bad grade. It is where the learning happened.'}</p>
       <div className="summary">
         <div className="stat"><b className="green">{passed}</b><span>passed</span></div>
         <div className="stat"><b className={TOTAL_TESTS - passed ? 'coral' : ''}>{TOTAL_TESTS - passed}</b><span>failed</span></div>
@@ -144,7 +145,7 @@ function Report({ state, onReplay }: { state: ReturnType<typeof reduce>; onRepla
       </div>
       <ul className="files mono">
         {perLevel.map(({ l, ok }) => (
-          <li key={l.id} className={ok === l.items.length ? 'ok' : 'bad'}><span>{ok === l.items.length ? '✓' : '✗'}</span><span className="fname">{l.file}</span><span>{ok}/{l.items.length}</span></li>
+          <li key={l.id} className={ok === l.items.length ? 'ok' : ok === 0 ? 'bad' : 'part'}><span>{ok === l.items.length ? '✓' : ok === 0 ? '✗' : '◐'}</span><span className="fname">{l.file}</span><span>{ok}/{l.items.length}</span></li>
         ))}
       </ul>
       <div className="rank"><div className="eyebrow mono">your rank</div><b>{rank.name}</b><p>{rank.line}</p></div>

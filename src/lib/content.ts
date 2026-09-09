@@ -1,110 +1,175 @@
-// All game content lives here. Edit freely: the engine renders whatever is described.
+// KBC-style question bank. Every question is a 4-option MCQ, one attempt, one correct answer.
+// Questions are drawn at random from the tier that matches the stage you are on.
 
-export type Item =
-  | { kind: 'sort'; prompt: string; hint: string; cards: { text: string; robot: boolean }[]; explain: string }
-  | { kind: 'choice'; prompt: string; options: string[]; answer: number; explain: string }
-  | { kind: 'order'; prompt: string; steps: string[]; interchangeable?: number[][]; explain: string }
-  | { kind: 'locate'; prompt: string; hint?: string; locator: string; target: string; explain: string }
-  | { kind: 'judge'; expected: string; actual: string; pass: boolean; explain: string }
-  | { kind: 'fix'; script: string[]; brokenLine: number; output: string; fixes: string[]; answer: number; explain: string };
+export type Tier = 'easy' | 'medium' | 'hard';
 
-export interface Level {
+export interface Question {
   id: string;
-  file: string; // shown like a test file name
-  title: string;
+  tier: Tier;
+  q: string;
+  options: string[];
+  answer: number;   // index into options
+  explain: string;
   concept: string;
-  story: string;
-  color: string;
-  items: Item[];
 }
 
-export const LEVELS: Level[] = [
-  {
-    id: 'automation', file: 'what-is-automation.test', title: 'Spot the repeat', concept: 'Automation', color: '#19C37D',
-    story: 'Sam tests the login page by hand. Fifty times a day. Which jobs should a robot take over?',
-    items: [
-      {
-        kind: 'sort', prompt: 'Tap every task a robot should do.', hint: 'Robots love boring. Humans keep the judgement calls.',
-        cards: [
-          { text: 'Log in and check the dashboard — after every code change', robot: true },
-          { text: 'Decide whether the new checkout design feels confusing', robot: false },
-          { text: 'Fill the sign-up form with 200 different email addresses', robot: true },
-          { text: 'Poke around the app looking for anything that feels odd', robot: false },
-        ],
-        explain: 'Repetitive and predictable → automate it. Judgement and exploration → keep a human on it.',
-      },
-      {
-        kind: 'choice', prompt: 'So, in one line: what is test automation?',
-        options: ['Getting a computer to run the repetitive test steps for you', 'Clicking through the app faster', 'Deleting the tests nobody likes'],
-        answer: 0,
-        explain: 'A computer repeats the same steps exactly, every time, without getting tired. That is the whole idea.',
-      },
-    ],
-  },
-  {
-    id: 'script', file: 'login.script.test', title: 'Build the script', concept: 'Script', color: '#4F6BFF',
-    story: 'A robot only does what you tell it, in the order you tell it. That list of steps is a script. (Tap a placed step to put it back.)',
-    items: [
-      {
-        kind: 'order', prompt: 'Tap the steps in the order the robot should do them.',
-        steps: ['OPEN the website', 'TYPE the username', 'TYPE the password', 'CLICK Login', 'CHECK the dashboard appears'],
-        interchangeable: [[1, 2]],
-        explain: 'Open → type → click → check. Every automated test is a list like this: actions, then a check.',
-      },
-      {
-        kind: 'order', prompt: 'Now the shop. Order the steps.',
-        steps: ['OPEN robo.shop', 'SEARCH "robo arm"', 'OPEN the product', 'ADD to cart', 'CHECK the cart has 1 item'],
-        explain: 'You cannot add before you open, and you cannot check before you add. Order is everything.',
-      },
-    ],
-  },
-  {
-    id: 'locator', file: 'find-the-element.test', title: 'Find it', concept: 'Locator', color: '#B36BFF',
-    story: 'The robot cannot "see" a button. It needs an address for it. That address is a locator.',
-    items: [
-      { kind: 'locate', prompt: 'Tap the thing this address points to:', hint: 'Every button and box on a page has a code name, its tag. A locator is an address built from it.', locator: '#login', target: 'login', explain: '# means "the thing whose id is…". The Log in button has id="login", so #login finds it.' },
-      { kind: 'locate', prompt: 'This address is a path, called XPath. Tap what it finds:', hint: "Read it left to right: // = anywhere on the page · input = a text box · [@name='password'] = named password.", locator: "//input[@name='password']", target: 'password', explain: 'XPath describes a path to a thing: what kind of thing, and which one. Here: a text box named password.' },
-      { kind: 'locate', prompt: 'Last one. Tap what it finds:', hint: "In XPath, a = a link, and text()= means 'whose words are'.", locator: "//a[text()='Sign up']", target: 'signup', explain: 'A link whose text is exactly "Sign up". Finding things by their words breaks if someone renames the link, so ids are safer.' },
-    ],
-  },
-  {
-    id: 'assertion', file: 'pass-or-fail.test', title: 'Pass or fail', concept: 'Assertion', color: '#FFB020',
-    story: 'After the steps, the robot compares what it expected with what it actually got. That comparison is an assertion.',
-    items: [
-      { kind: 'judge', expected: 'Dashboard page', actual: 'Dashboard page', pass: true, explain: 'Expected matches actual. PASS.' },
-      { kind: 'judge', expected: 'Cart has 1 item', actual: 'Cart has 0 items', pass: false, explain: 'One is not zero. FAIL — and that is the test doing its job.' },
-      { kind: 'judge', expected: '"Welcome, Sam"', actual: '"Welcome, sam"', pass: false, explain: 'Robots are literal. To a robot, a lowercase s makes it a different word. FAIL.' },
-      { kind: 'judge', expected: 'Logged-out page', actual: 'Logged-out page', pass: true, explain: 'Exact match. PASS. A test without an assertion is not a test.' },
-    ],
-  },
-  {
-    id: 'debugging', file: 'fix-the-robot.test', title: 'Fix the bug', concept: 'Debugging', color: '#FF5A5F',
-    story: 'A red test is a message, not a disaster. Read the output, find the broken step, fix it, run again.',
-    items: [
-      {
-        kind: 'fix', script: ['OPEN the website', 'TYPE username "sam"', 'TYPE password "robot123"', 'CLICK #logni', 'CHECK dashboard'],
-        brokenLine: 3, output: 'Error at step 4: element "#logni" not found', fixes: ['CLICK #login', 'WAIT 2 seconds', 'CLICK #logout'], answer: 0,
-        explain: 'Wrong locator. "#logni" is a typo for "#login". Locators must match exactly.',
-      },
-      {
-        kind: 'fix', script: ['OPEN the website', 'TYPE username "sam"', 'TYPE password "robot123"', 'CLICK #login', 'CHECK "Dashbored"'],
-        brokenLine: 4, output: 'Assertion failed at step 5: expected "Dashbored", saw "Dashboard"', fixes: ['CHECK "Error"', 'CHECK "Dashboard"', 'TYPE password again'], answer: 1,
-        explain: 'The app was fine. The expected value in the test was misspelled. Tests can have bugs too.',
-      },
-      {
-        kind: 'fix', script: ['OPEN the website', 'TYPE username "sam"', 'TYPE password "robot123"', 'CLICK #login', 'CHECK dashboard right away'],
-        brokenLine: 4, output: 'Assertion failed at step 5: page was still loading', fixes: ['CLICK #login twice', 'WAIT for the page, then CHECK dashboard', 'Delete step 5'], answer: 1,
-        explain: 'The robot checked too early. Waiting for the page to load is one of the most common fixes in automation.',
-      },
-    ],
-  },
+export interface Stage {
+  n: number;        // 1-based rung
+  name: string;
+  tier: Tier;
+  seconds: number;
+  checkpoint?: boolean;
+}
+
+/** The ladder is a build pipeline. Every right answer promotes the build one stage. */
+export const LADDER: Stage[] = [
+  { n: 1, name: 'Commit', tier: 'easy', seconds: 30 },
+  { n: 2, name: 'Lint', tier: 'easy', seconds: 30 },
+  { n: 3, name: 'Build', tier: 'easy', seconds: 30, checkpoint: true },
+  { n: 4, name: 'Unit tests', tier: 'easy', seconds: 25 },
+  { n: 5, name: 'Integration', tier: 'medium', seconds: 25 },
+  { n: 6, name: 'API tests', tier: 'medium', seconds: 25 },
+  { n: 7, name: 'End-to-end', tier: 'medium', seconds: 22, checkpoint: true },
+  { n: 8, name: 'Staging', tier: 'hard', seconds: 20 },
+  { n: 9, name: 'Smoke test', tier: 'hard', seconds: 20 },
+  { n: 10, name: 'Production', tier: 'hard', seconds: 20 },
 ];
 
-export const TOTAL_TESTS = LEVELS.reduce((n, l) => n + l.items.length, 0);
+export const BANK: Question[] = [
+  // ---------------- EASY ----------------
+  { id: 'e1', tier: 'easy', concept: 'Automation',
+    q: 'Sam logs in and checks the dashboard 50 times a day, every day. Why is this worth automating?',
+    options: ['It is repetitive and the steps never change', 'It is the hardest part of testing', 'Robots enjoy it', 'It uses less electricity'],
+    answer: 0, explain: 'Repetitive, predictable work is exactly what a computer does well: the same steps, the same way, every time.' },
+  { id: 'e2', tier: 'easy', concept: 'Automation',
+    q: 'In one line, what is test automation?',
+    options: ['Clicking through the app faster', 'Getting a computer to run test steps for you', 'Writing fewer tests', 'Testing only after release'],
+    answer: 1, explain: 'A computer repeats the steps you taught it, without getting tired or bored. That is the whole idea.' },
+  { id: 'e3', tier: 'easy', concept: 'Manual vs automated',
+    q: 'Which job should stay with a human?',
+    options: ['Filling a form with 200 email addresses', 'Logging in after every code change', 'Deciding whether the new checkout screen feels confusing', 'Checking 50 product pages load'],
+    answer: 2, explain: 'Judgement and taste stay human. Repetition goes to the robot.' },
+  { id: 'e4', tier: 'easy', concept: 'Script',
+    q: 'What is a test script?',
+    options: ['A bug report', 'A screenshot of the app', 'The name of the tester', 'The list of steps the tool follows, in order'],
+    answer: 3, explain: 'Open, type, click, check. A script is just that list, and the robot follows it top to bottom.' },
+  { id: 'e5', tier: 'easy', concept: 'Locator',
+    q: 'A robot cannot see the screen. So how does it find the Log in button?',
+    options: ['By an address called a locator', 'By taking a photo', 'By guessing where it usually sits', 'It asks the user'],
+    answer: 0, explain: 'Every button and box has a code name. The address built from it is called a locator.' },
+  { id: 'e6', tier: 'easy', concept: 'Test case',
+    q: 'What is a test case?',
+    options: ['A folder of screenshots', 'The steps to perform plus the result you expect', 'A list of known bugs', 'The box the software ships in'],
+    answer: 1, explain: 'Steps plus expected result. Without the expected result you are just clicking around.' },
+  { id: 'e7', tier: 'easy', concept: 'Automation',
+    q: 'The login test is now automated. What changes for Sam?',
+    options: ['He stops testing entirely', 'He runs the same test twice as often by hand', 'He spends his time on the tests that need judgement', 'Nothing changes'],
+    answer: 2, explain: 'Automation does not replace testers. It hands them back the hours the robot can cover.' },
+  { id: 'e8', tier: 'easy', concept: 'Automation',
+    q: 'Which is the strongest sign a test is worth automating?',
+    options: ['It runs after every single code change', 'It was written last week', 'Nobody on the team understands it', 'It will only ever run once'],
+    answer: 0, explain: 'The more often a check repeats, the more a robot saves you. A one-off check is rarely worth the setup.' },
+
+  // ---------------- MEDIUM ----------------
+  { id: 'm1', tier: 'medium', concept: 'Locator',
+    q: 'What does the locator #login point to?',
+    options: ['Any element containing the word login', 'The element whose id is login', 'The first button on the page', 'A comment in the code'],
+    answer: 1, explain: '# means "the thing whose id is…". Ids are meant to be unique, which makes them reliable addresses.' },
+  { id: 'm2', tier: 'medium', concept: 'XPath',
+    q: "What does //input[@name='password'] find?",
+    options: ['A text box whose name is password', 'Every input on the page', 'The word "password" wherever it appears', 'A link called password'],
+    answer: 0, explain: "// = anywhere on the page · input = a text box · [@name='password'] = named password." },
+  { id: 'm3', tier: 'medium', concept: 'Assertion',
+    q: 'What is an assertion?',
+    options: ['A click on a button', 'A comment explaining the test', 'A check that the actual result matches what you expected', 'The time the test took to run'],
+    answer: 2, explain: 'Expected versus actual. The assertion is the moment a test decides pass or fail.' },
+  { id: 'm4', tier: 'medium', concept: 'Assertion',
+    q: 'A test performs every step but never checks anything. What is wrong with it?',
+    options: ['It can never fail, so it proves nothing', 'It runs too fast', 'It uses too much memory', 'Nothing, that is a normal test'],
+    answer: 0, explain: 'A test with no assertion is a green light that means nothing. It would pass even if the app were broken.' },
+  { id: 'm5', tier: 'medium', concept: 'Pass / fail',
+    q: 'Expected: "Cart has 1 item". Actual: "Cart has 0 items". What does the test do?',
+    options: ['Pass', 'Fail', 'Retry quietly', 'Skip itself'],
+    answer: 1, explain: 'One is not zero, so the assertion fails. That red result is the test doing its job.' },
+  { id: 'm6', tier: 'medium', concept: 'Locator',
+    q: 'Which locator is most likely to still work after the page is redesigned?',
+    options: ['The text "Log in"', 'id="login"', 'The third button from the top', "The button's colour"],
+    answer: 1, explain: 'Text gets reworded and positions move. An id is chosen by developers and usually survives a redesign.' },
+  { id: 'm7', tier: 'medium', concept: 'Debugging',
+    q: 'A test clicks Login, checks the dashboard immediately, and fails because the page was still loading. What is missing?',
+    options: ['A wait for the page to be ready', 'A faster computer', 'A second click', 'A screenshot'],
+    answer: 0, explain: 'Robots are fast. Waiting for the page before checking is one of the most common fixes in automation.' },
+  { id: 'm8', tier: 'medium', concept: 'Script',
+    q: 'Which is the right order for a login script?',
+    options: ['Check → open → type → click', 'Type → check → open → click', 'Open → type → click → check', 'Click → check → type → open'],
+    answer: 2, explain: 'Actions first, check last. You cannot check a dashboard you have not opened yet.' },
+  { id: 'm9', tier: 'medium', concept: 'XPath',
+    q: 'What is XPath?',
+    options: ['A way to write a locator as a path to an element', 'A programming language', 'A kind of bug', 'A test report format'],
+    answer: 0, explain: 'XPath describes a path: what kind of thing, and which one. //button[@id=\'login\'] is a button with id login.' },
+
+  // ---------------- HARD ----------------
+  { id: 'h1', tier: 'hard', concept: 'Assertion',
+    q: 'Expected: "Welcome, Sam". Actual: "Welcome, sam". What happens?',
+    options: ['It passes, the meaning is the same', 'It passes with a warning', 'It fails, to a robot those are different words', 'The test is skipped'],
+    answer: 2, explain: 'Robots are literal. A lowercase s makes it a different word, so the assertion fails.' },
+  { id: 'h2', tier: 'hard', concept: 'Debugging',
+    q: 'A test goes red. You try the app by hand and it works perfectly. Most likely cause?',
+    options: ['The test itself is wrong', 'The app is broken anyway', 'The internet is down', 'The test should be deleted'],
+    answer: 0, explain: 'Tests have bugs too: a typo in a locator, a misspelled expected value, a missing wait.' },
+  { id: 'h3', tier: 'hard', concept: 'Locator',
+    q: 'Why is //div[3]/span[2]/button a poor locator?',
+    options: ['It is too short', 'Any small layout change breaks it', 'It only works in one browser', 'It is not valid XPath'],
+    answer: 1, explain: 'It describes a position, not a thing. Move one element and the address points somewhere else.' },
+  { id: 'h4', tier: 'hard', concept: 'Debugging',
+    q: 'A test passes sometimes and fails other times, with no change to the code. What is that called?',
+    options: ['A unit test', 'A smoke test', 'A flaky test', 'A passing test'],
+    answer: 2, explain: 'Flaky tests are usually a timing problem. They are dangerous because the team stops trusting red.' },
+  { id: 'h5', tier: 'hard', concept: 'Debugging',
+    q: 'A test just failed. What is the first thing to do?',
+    options: ['Read the error and find which step broke', 'Delete the test', 'Run it ten more times', 'Release anyway'],
+    answer: 0, explain: 'Read, locate, fix, run again. The error message almost always names the step and the reason.' },
+  { id: 'h6', tier: 'hard', concept: 'Automation',
+    q: 'Which of these is NOT worth automating?',
+    options: ['The login flow', 'A one-off check you will never run again', 'The checkout flow', 'A form with 50 fields'],
+    answer: 1, explain: 'Automation costs time to write. It pays back on repetition, so a single check is cheaper by hand.' },
+  { id: 'h7', tier: 'hard', concept: 'Pass / fail',
+    q: 'Your suite has 500 tests and 3 are red. What should the team do before releasing?',
+    options: ['Release, 497 passed', 'Delete the 3 failing tests', 'Rerun until they go green', 'Find out why those 3 are red'],
+    answer: 3, explain: 'Three red tests are three questions to answer. Ignoring red is how teams stop trusting their suite.' },
+  { id: 'h8', tier: 'hard', concept: 'Debugging',
+    q: 'What does debugging mean in test automation?',
+    options: ['Finding the broken step, fixing it, running again', 'Removing every bug from the app forever', 'Writing more tests', 'Renaming the failing test'],
+    answer: 0, explain: 'Read the error, find the step, fix it, rerun. Repeat until the run is green.' },
+];
 
 export const RANKS = [
-  { min: 0, name: 'Curious Human', line: 'You met the robot. Play again and it will remember you.' },
-  { min: 0.5, name: 'Automation Apprentice', line: 'You know what a script, a locator and an assertion are. That is more than most.' },
-  { min: 0.8, name: 'Automation Engineer', line: 'Scripts, locators, assertions, debugging. You could explain this to a friend.' },
-  { min: 1, name: 'Green Suite Legend', line: 'Every test green on the first run. Sam would like to hire you.' },
+  { min: 0, name: 'Build Failed', line: 'Everyone starts here. The next run picks different questions.' },
+  { min: 3, name: 'Junior Tester', line: 'You got the build compiling. You know what automation is for.' },
+  { min: 5, name: 'QA Engineer', line: 'Scripts, locators, assertions. You could explain these to a friend.' },
+  { min: 8, name: 'Automation Engineer', line: 'You made it to staging. Locators, waits and flaky tests hold no fear.' },
+  { min: 10, name: 'Release Manager', line: 'Shipped to production with every test green. Sam would like to hire you.' },
 ];
+
+export const CONCEPTS = ['Automation', 'Manual vs automated', 'Test case', 'Script', 'Locator', 'XPath', 'Assertion', 'Pass / fail', 'Debugging'];
+
+/** Fisher-Yates with a seed so a run is reproducible within itself. */
+export function shuffle<T>(arr: T[], seed = Math.random() * 1e9): T[] {
+  const a = [...arr];
+  let s = Math.floor(seed) % 2147483647;
+  if (s <= 0) s += 2147483646;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+export interface Drawn { question: Question; order: number[]; answer: number }
+
+/** Pick one random unused question of a tier, and shuffle its options. */
+export function draw(tier: Tier, used: Set<string>): Drawn {
+  const pool = BANK.filter((q) => q.tier === tier && !used.has(q.id));
+  const source = pool.length ? pool : BANK.filter((q) => q.tier === tier);
+  const question = shuffle(source)[0];
+  const order = shuffle([0, 1, 2, 3]);
+  return { question, order, answer: order.indexOf(question.answer) };
+}

@@ -83,7 +83,51 @@ debugging — the learning goal held. Her top findings and what changed:
 | Report felt like a bad school report; copied text had no link | Headline is "10 of 14 green", partial levels show ◐ in yellow, kinder copy, share text includes the play link. |
 | Result sheet covered content / clipped text | Sheet scrolls if tall, page gets bottom padding while a sheet is open, long text wraps. |
 
-## 5. Iteration log
+## 5. Team review → v2.0 (KBC format)
+
+A team member reviewed v1.1 and asked for a different format:
+
+> "Attach a timer with inside animation and have a quiz which is made of only MCQ nothing else,
+> and questions need to be random but have some difficulty level as going forward. It should be a
+> single time to solve any specific quiz question, like KBC."
+
+**Inception.** Five requirements, all structural: (1) an animated timer, (2) MCQ only, (3) random
+questions, (4) rising difficulty, (5) one attempt per question. Taken together that is *Kaun Banega
+Crorepati*: a ladder you climb, a clock on every question, lock your answer, no take-backs.
+
+**Design decision — what is the ladder?** KBC climbs a money ladder. Money means nothing here, so
+the ladder became the thing the game is already named after: **a build pipeline**. Every correct
+answer promotes the build one stage, Commit → Lint → Build → … → Production. Getting one wrong
+turns the pipeline red. The title finally means exactly what the game asks you to do.
+
+**What changed**
+
+| v1.1 | v2.0 |
+| --- | --- |
+| 6 interaction types (sort, order, locate, judge, fix, choice) | One type: 4-option MCQ |
+| 14 fixed questions in a fixed order | 10 drawn at random from a bank of 25, options shuffled too |
+| One flat difficulty | 3 tiers: easy (stages 1–4), medium (5–7), hard (8–10) |
+| No timer | Animated countdown ring, 30s → 20s by tier, red pulse and ticking in the last 5s |
+| One free retry per question | One attempt. Select, then **Lock it in**. No second chance |
+| Wrong answers continue the run | Wrong or out of time ends the run, with checkpoints at stages 3 and 7 |
+| — | 3 lifelines: **Bisect** (removes two wrong answers), **Ask the team** (poll), **Rerun** (swaps the question) |
+| Fixed content, low replay value | Random draw makes every run different, so replaying is the point |
+
+**Construction.** New `content.ts` (25 questions, 3 tiers, ladder definition, seeded shuffle),
+new reducer with the lock/reveal/promote/game-over phases, `Timer.tsx` (SVG ring with the seconds
+animating inside), `Ladder.tsx` (rail while playing, full list on the intro, stage-clear and report).
+The dark question card with a gold glow keeps the KBC drama inside the existing periwinkle palette.
+
+**Quality gates.** Type-check, then a scripted browser play-through at 390×844 of: a perfect 10/10
+run to Production, a wrong answer at stage 2, a timeout with no answer selected, and all three
+lifelines. Every path verified before release.
+
+**Trade-off accepted.** The varied v1.1 mechanics were more distinctive as a learning device, but a
+single format is faster to grasp, far more replayable, and is what the team asked for. v1.1 remains
+in git history.
+
+## 6. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
+- v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.

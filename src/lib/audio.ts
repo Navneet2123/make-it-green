@@ -15,6 +15,13 @@ function tone(freq: number, dur = 0.12, type: OscillatorType = 'sine', vol = 0.1
   } catch {}
 }
 export const sfx = {
+  tick: () => tone(1400, 0.04, 'square', 0.07),
+  tickUrgent: () => { tone(1800, 0.05, 'square', 0.12); tone(900, 0.05, 'square', 0.06, 0.03); },
+  lock: () => { tone(300, 0.09, 'square', 0.16, 0, 180); tone(150, 0.16, 'sine', 0.18, 0.07); },
+  suspense: () => { tone(90, 0.5, 'sine', 0.14); tone(135, 0.5, 'sine', 0.07, 0.25); },
+  lifeline: () => { tone(880, 0.07, 'triangle', 0.13, 0, 1320); tone(1320, 0.1, 'sine', 0.08, 0.06); },
+  stageUp: () => [523, 784, 1047].forEach((f, i) => tone(f, 0.22, 'triangle', 0.15, i * 0.08)),
+  gameOver: () => { tone(240, 0.35, 'sawtooth', 0.14, 0, 120); tone(180, 0.5, 'sawtooth', 0.12, 0.3, 80); },
   tap: () => tone(700, 0.05, 'triangle', 0.12),
   select: () => tone(520, 0.07, 'triangle', 0.14, 0, 780),
   pass: () => { [523, 659, 784].forEach((f, i) => tone(f, 0.18, 'triangle', 0.16, i * 0.07)); tone(1568, 0.3, 'sine', 0.08, 0.2); },

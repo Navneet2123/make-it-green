@@ -2,6 +2,10 @@
 
 > Ten questions. One shot each. A timer on every one. Get the build to production.
 
+### ▶ [Play it now — navneet2123.github.io/make-it-green](https://navneet2123.github.io/make-it-green/)
+
+No install, no sign-up. Works on a phone.
+
 **Make It Green** is a fast, beautiful, KBC-style quiz that teaches the basics of software test
 automation. Every correct answer promotes your build one stage up a pipeline, from **Commit** to
 **Production**. Get one wrong, or run out of time, and the pipeline goes red.
@@ -167,8 +171,19 @@ this format.
 
 ## Deploy
 
-`npm run build` produces a static `dist/` folder for GitHub Pages, Netlify, Vercel or any web
-server. For a sub-path deployment, set `base: '/make-it-green/'` in `vite.config.ts` first.
+This repo deploys itself. Every push to `main` runs
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which builds the site and publishes it
+to GitHub Pages at **https://navneet2123.github.io/make-it-green/** — free, no account needed by players.
+
+To host your own copy:
+
+1. Fork this repo.
+2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
+3. Change `base` in [`vite.config.ts`](vite.config.ts) to `'/<your-repo-name>/'`.
+4. Push to `main`. The workflow builds and publishes in about a minute.
+
+`npm run build` also produces a plain static `dist/` folder that works on Netlify, Vercel, Cloudflare
+Pages or any web server.
 
 ## License
 

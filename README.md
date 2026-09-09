@@ -9,12 +9,14 @@ automation. Every correct answer promotes your build one stage up a pipeline, fr
 It is the 5-minute companion to [AUTO: The Automation Mission](https://github.com/Navneet2123/auto-automation-mission),
 a 30–45 minute 3D adventure on the same topic.
 
+- 🍫 **Points and a prize bar.** Score 1000 or more and you have earned a chocolate
 - ⏱️ **Animated countdown** on every question, 30 seconds down to 20 as it gets harder
 - 🔒 **One attempt.** Pick an answer, lock it in, live with it
 - 🎲 **Random questions** drawn from a bank of 25, with the options shuffled too
 - 📈 **Rising difficulty:** easy → medium → hard as you climb
 - ✂️ **Three lifelines:** Bisect, Ask the team, Rerun
 - 🔐 **Checkpoints** at stages 3 and 7, so a late mistake does not erase everything
+- ⟲ **Restart any time** from the header, with a confirm so you never lose a run by accident
 - 📱 Phone-first, no sign-up, no backend, no assets to download
 
 ---
@@ -58,15 +60,37 @@ Open **http://localhost:5174** and press **▶ Start the pipeline**.
 
 Keyboard: **A**–**D** to pick, **Enter** to lock and to continue.
 
+Your running score sits beside the stage name, and your best score is remembered on this device.
+
 ### The pipeline
 
-| Stage | Tier | Time |
-| --- | --- | --- |
-| 1 Commit · 2 Lint · 3 Build 🔒 · 4 Unit tests | easy | 30s / 25s |
-| 5 Integration · 6 API tests · 7 End-to-end 🔒 | medium | 25s / 22s |
-| 8 Staging · 9 Smoke test · 10 Production | hard | 20s |
+| Stage | Tier | Time | Points |
+| --- | --- | --- | --- |
+| 1 Commit | easy | 30s | 50 |
+| 2 Lint | easy | 30s | 100 |
+| 3 Build 🔒 | easy | 30s | 150 |
+| 4 Unit tests | easy | 25s | 200 |
+| 5 Integration | medium | 25s | 300 |
+| 6 API tests | medium | 25s | 400 |
+| 7 End-to-end 🔒 | medium | 22s | 500 |
+| 8 Staging | hard | 20s | 700 |
+| 9 Smoke test | hard | 20s | 900 |
+| 10 Production | hard | 20s | 1200 |
 
-🔒 marks a checkpoint. Clear it and you keep that stage on your report even if a later question ends the run.
+🔒 marks a checkpoint. Clear it and you keep that stage and that score on your report even if a later question ends the run.
+
+### Scoring and the chocolate
+
+- Each correct answer earns the stage's points, plus a **speed bonus** of up to 50% for answering fast.
+- **Score 1000 or more and you have earned a chocolate.** That is roughly the easy tier plus one medium question.
+- A progress bar toward the chocolate appears after every stage, and the final report says plainly whether it was earned. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
+- A perfect, fast run scores **6750**.
+
+To make the prize easier or harder, change `PASS_SCORE` in [`src/lib/content.ts`](src/lib/content.ts). Point values per stage and the `SPEED_BONUS` share live there too.
+
+### Restarting
+
+Press **⟲** in the header at any time to start a completely fresh run. It asks for confirmation and tells you the score you are about to lose, so a mis-tap during a timed question cannot wipe your progress.
 
 ### Lifelines (once each per run)
 
@@ -121,8 +145,8 @@ src/
 │   ├── Ladder.tsx         The pipeline: compact rail while playing, full list elsewhere
 │   └── Question.tsx       MCQ card, options, poll bars, lifeline bar
 └── lib/
-    ├── content.ts         Question bank, ladder, ranks, random draw (edit me)
-    ├── game.ts            Reducer: lock, reveal, promote, checkpoints, game over
+    ├── content.ts         Question bank, ladder, points, pass mark, random draw (edit me)
+    ├── game.ts            Reducer: lock, reveal, promote, scoring, checkpoints, game over
     └── audio.ts           Tiny Web Audio synth (ticks, lock, suspense, chimes)
 docs/
 └── AI-DLC.md              How this was built, the beginner playtest, and the KBC rework

@@ -126,8 +126,36 @@ lifelines. Every path verified before release.
 single format is faster to grasp, far more replayable, and is what the team asked for. v1.1 remains
 in git history.
 
-## 6. Iteration log
+## 6. Follow-up review → v2.1 (points and restart)
+
+Two more requests from the team:
+
+> "Shouldn't the project have a restart button to start from scratch, and also have a points system,
+> as we distribute chocolates to the people if they passed the quiz?"
+
+The second one is the important one: the game is being played at a real event where a **chocolate is
+the prize**, so the score has to answer one question unambiguously — *did this person pass?*
+
+**Points.** Every stage is worth more than the last, KBC-style, and the values are printed on the
+ladder so the stakes are visible before you answer: 50, 100, 150, 200, 300, 400, 500, 700, 900, 1200.
+Answer quickly and you keep a speed bonus of up to 50% of the stage value, so the timer rewards
+you as well as threatening you. A perfect, fast run scores 6750.
+
+**The chocolate bar.** `PASS_SCORE = 1000`, which is roughly "clear the easy tier and one medium
+question". A progress bar toward it appears after every stage, and the report ends with either
+"🍫 Chocolate earned — show this screen to claim it" or how many points short you were. The copied
+result includes the score and the verdict, so a claim can be shown or sent.
+
+**Restart.** A ⟲ button sits in the header from the first question onward. It opens a confirm dialog
+naming the score you are about to lose, because a mis-tap during a timed question would be
+infuriating. The report's button is now labelled Restart too, so the wording matches everywhere.
+
+Both are tuned in one place: `PASS_SCORE`, `SPEED_BONUS` and each stage's `points` live in
+`src/lib/content.ts`, so the bar can be moved for an easier or harder chocolate.
+
+## 7. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
+- v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.

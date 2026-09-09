@@ -18,22 +18,30 @@ export interface Stage {
   name: string;
   tier: Tier;
   seconds: number;
+  points: number;   // base points for clearing this stage
   checkpoint?: boolean;
 }
 
+/** Score needed to win a chocolate. Roughly: clear the easy tier and one medium question. */
+export const PASS_SCORE = 1000;
+/** Answer fast and you keep up to this share of the stage points as a speed bonus. */
+export const SPEED_BONUS = 0.5;
+
 /** The ladder is a build pipeline. Every right answer promotes the build one stage. */
 export const LADDER: Stage[] = [
-  { n: 1, name: 'Commit', tier: 'easy', seconds: 30 },
-  { n: 2, name: 'Lint', tier: 'easy', seconds: 30 },
-  { n: 3, name: 'Build', tier: 'easy', seconds: 30, checkpoint: true },
-  { n: 4, name: 'Unit tests', tier: 'easy', seconds: 25 },
-  { n: 5, name: 'Integration', tier: 'medium', seconds: 25 },
-  { n: 6, name: 'API tests', tier: 'medium', seconds: 25 },
-  { n: 7, name: 'End-to-end', tier: 'medium', seconds: 22, checkpoint: true },
-  { n: 8, name: 'Staging', tier: 'hard', seconds: 20 },
-  { n: 9, name: 'Smoke test', tier: 'hard', seconds: 20 },
-  { n: 10, name: 'Production', tier: 'hard', seconds: 20 },
+  { n: 1, name: 'Commit', tier: 'easy', seconds: 30, points: 50 },
+  { n: 2, name: 'Lint', tier: 'easy', seconds: 30, points: 100 },
+  { n: 3, name: 'Build', tier: 'easy', seconds: 30, points: 150, checkpoint: true },
+  { n: 4, name: 'Unit tests', tier: 'easy', seconds: 25, points: 200 },
+  { n: 5, name: 'Integration', tier: 'medium', seconds: 25, points: 300 },
+  { n: 6, name: 'API tests', tier: 'medium', seconds: 25, points: 400 },
+  { n: 7, name: 'End-to-end', tier: 'medium', seconds: 22, points: 500, checkpoint: true },
+  { n: 8, name: 'Staging', tier: 'hard', seconds: 20, points: 700 },
+  { n: 9, name: 'Smoke test', tier: 'hard', seconds: 20, points: 900 },
+  { n: 10, name: 'Production', tier: 'hard', seconds: 20, points: 1200 },
 ];
+
+export const MAX_SCORE = LADDER.reduce((n, s) => n + Math.round(s.points * (1 + SPEED_BONUS)), 0);
 
 export const BANK: Question[] = [
   // ---------------- EASY ----------------

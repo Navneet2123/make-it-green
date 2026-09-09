@@ -23,6 +23,7 @@ export function LadderList({ cleared, current, compact = false }: { cleared: num
             initial={false} animate={done ? { scale: [1, 1.03, 1] } : {}} transition={{ duration: 0.4 }}>
             <span className="step-n">{s.n}</span>
             <span className="step-name">{s.name}</span>
+            <span className="step-pts mono">{s.points}</span>
             <span className="step-mark">{done ? '✓' : s.checkpoint ? '🔒' : ''}</span>
           </motion.li>
         );

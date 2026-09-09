@@ -1,4 +1,4 @@
-import { LADDER, RANKS, draw, type Drawn } from './content';
+import { LADDER, PASS_SCORE, RANKS, SPEED_BONUS, draw, type Drawn } from './content';
 
 export type Phase = 'intro' | 'question' | 'reveal' | 'stageclear' | 'over';
 
@@ -17,6 +17,9 @@ export interface State {
   lastCorrect: boolean | null;
   timedOut: boolean;
   reached: number;          // stages cleared
+  score: number;            // points earned so far
+  banked: number;           // score at the last checkpoint you cleared
+  lastGain: { base: number; bonus: number } | null;
   answers: { concept: string; correct: boolean }[];
   startedAt: number | null;
   finishedAt: number | null;
@@ -26,7 +29,8 @@ export interface State {
 export const fresh = (): State => ({
   phase: 'intro', stage: 0, drawn: null, used: new Set(), selected: null, timeLeft: LADDER[0].seconds,
   lifelines: { bisect: true, ask: true, rerun: true }, hidden: [], poll: null,
-  lastCorrect: null, timedOut: false, reached: 0, answers: [], startedAt: null, finishedAt: null, won: false,
+  lastCorrect: null, timedOut: false, reached: 0, score: 0, banked: 0, lastGain: null,
+  answers: [], startedAt: null, finishedAt: null, won: false,
 });
 
 export type Action =
@@ -101,16 +105,31 @@ export function reduce(s: State, a: Action): State {
 
 function settle(s: State, choice: number | null, timedOut: boolean): State {
   const correct = choice !== null && choice === s.drawn!.answer;
+  const st = LADDER[s.stage];
+  const base = correct ? st.points : 0;
+  const bonus = correct ? Math.round(st.points * SPEED_BONUS * Math.max(0, s.timeLeft) / st.seconds) : 0;
+  const score = s.score + base + bonus;
   return {
     ...s, phase: 'reveal', selected: choice, lastCorrect: correct, timedOut, timeLeft: 0,
     reached: correct ? s.stage + 1 : s.reached,
+    score, banked: correct && st.checkpoint ? score : s.banked,
+    lastGain: correct ? { base, bonus } : null,
     answers: [...s.answers, { concept: s.drawn!.question.concept, correct }],
   };
 }
+
+export const wonChocolate = (score: number) => score >= PASS_SCORE;
 
 export const rankFor = (cleared: number) => [...RANKS].reverse().find((r) => cleared >= r.min)!;
 export const fmtTime = (ms: number) => { const t = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 
 const BEST_KEY = 'mig-best-stage';
+const BEST_SCORE_KEY = 'mig-best-score';
 export const loadBest = () => { try { return Number(localStorage.getItem(BEST_KEY)) || 0; } catch { return 0; } };
-export const saveBest = (n: number) => { try { if (n > loadBest()) localStorage.setItem(BEST_KEY, String(n)); } catch {} };
+export const loadBestScore = () => { try { return Number(localStorage.getItem(BEST_SCORE_KEY)) || 0; } catch { return 0; } };
+export const saveBest = (n: number, score: number) => {
+  try {
+    if (n > loadBest()) localStorage.setItem(BEST_KEY, String(n));
+    if (score > loadBestScore()) localStorage.setItem(BEST_SCORE_KEY, String(score));
+  } catch {}
+};

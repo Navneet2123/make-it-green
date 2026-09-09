@@ -1,6 +1,6 @@
-import { LADDER, PASS_SCORE, RANKS, SPEED_BONUS, draw, type Drawn } from './content';
+import { LADDER, PASS_SCORE, RANKS, SPEED_BONUS, draw, rememberSeen, type Drawn } from './content';
 
-export type Phase = 'intro' | 'question' | 'reveal' | 'stageclear' | 'over';
+export type Phase = 'intro' | 'question' | 'locking' | 'reveal' | 'stageclear' | 'over';
 
 export interface Lifelines { bisect: boolean; ask: boolean; rerun: boolean }
 
@@ -20,6 +20,8 @@ export interface State {
   score: number;            // points earned so far
   banked: number;           // score at the last checkpoint you cleared
   lastGain: { base: number; bonus: number } | null;
+  paused: boolean;          // a dialog is open, so the clock stops
+  justWonPrize: boolean;    // this answer is the one that crossed the chocolate line
   answers: { concept: string; correct: boolean }[];
   startedAt: number | null;
   finishedAt: number | null;
@@ -29,13 +31,14 @@ export interface State {
 export const fresh = (): State => ({
   phase: 'intro', stage: 0, drawn: null, used: new Set(), selected: null, timeLeft: LADDER[0].seconds,
   lifelines: { bisect: true, ask: true, rerun: true }, hidden: [], poll: null,
-  lastCorrect: null, timedOut: false, reached: 0, score: 0, banked: 0, lastGain: null,
+  lastCorrect: null, timedOut: false, reached: 0, score: 0, banked: 0, lastGain: null, paused: false, justWonPrize: false,
   answers: [], startedAt: null, finishedAt: null, won: false,
 });
 
 export type Action =
-  | { type: 'start' } | { type: 'select'; i: number } | { type: 'lock' } | { type: 'tick'; dt: number }
-  | { type: 'next' } | { type: 'bisect' } | { type: 'ask' } | { type: 'rerun' } | { type: 'reset' };
+  | { type: 'start' } | { type: 'select'; i: number } | { type: 'lock' } | { type: 'reveal' } | { type: 'tick'; dt: number }
+  | { type: 'next' } | { type: 'bisect' } | { type: 'ask' } | { type: 'rerun' } | { type: 'reset' }
+  | { type: 'pause'; on: boolean } | { type: 'prizeSeen' };
 
 /** Where you fall back to when a run ends: the last checkpoint you cleared. */
 export function checkpointFor(cleared: number) {
@@ -47,14 +50,16 @@ export function checkpointFor(cleared: number) {
 export function reduce(s: State, a: Action): State {
   switch (a.type) {
     case 'start': {
-      const drawn = draw(LADDER[0].tier, new Set());
+      const drawn = draw(LADDER[0].tier, new Set(), 1);
       return { ...fresh(), phase: 'question', drawn, used: new Set([drawn.question.id]), timeLeft: LADDER[0].seconds, startedAt: Date.now() };
     }
     case 'select':
       if (s.phase !== 'question' || s.hidden.includes(a.i)) return s;
       return { ...s, selected: a.i };
+    case 'pause': return { ...s, paused: a.on };
+    case 'prizeSeen': return { ...s, justWonPrize: false };
     case 'tick': {
-      if (s.phase !== 'question') return s;
+      if (s.phase !== 'question' || s.paused) return s;
       const t = s.timeLeft - a.dt;
       if (t > 0) return { ...s, timeLeft: t };
       // out of time: a selected-but-unlocked answer still counts, otherwise it is a miss
@@ -62,18 +67,22 @@ export function reduce(s: State, a: Action): State {
     }
     case 'lock':
       if (s.phase !== 'question' || s.selected === null) return s;
+      return { ...s, phase: 'locking' };   // hold for the suspense beat
+    case 'reveal':
+      if (s.phase !== 'locking') return s;
       return settle(s, s.selected, false);
     case 'next': {
       if (s.phase === 'reveal' && s.lastCorrect) {
         const nextStage = s.stage + 1;
-        if (nextStage >= LADDER.length) return { ...s, phase: 'over', won: true, finishedAt: Date.now() };
+        if (nextStage >= LADDER.length) { rememberSeen([...s.used]); return { ...s, phase: 'over', won: true, finishedAt: Date.now() }; }
         return { ...s, phase: 'stageclear', stage: nextStage };
       }
       if (s.phase === 'stageclear') {
         const st = LADDER[s.stage];
-        const drawn = draw(st.tier, s.used);
+        const drawn = draw(st.tier, s.used, st.n);
         return { ...s, phase: 'question', drawn, used: new Set([...s.used, drawn.question.id]), selected: null, hidden: [], poll: null, timeLeft: st.seconds, timedOut: false };
       }
+      rememberSeen([...s.used]);
       return { ...s, phase: 'over', finishedAt: Date.now() };
     }
     case 'bisect': {
@@ -96,7 +105,7 @@ export function reduce(s: State, a: Action): State {
     case 'rerun': {
       if (s.phase !== 'question' || !s.lifelines.rerun) return s;
       const st = LADDER[s.stage];
-      const drawn = draw(st.tier, s.used);
+      const drawn = draw(st.tier, s.used, st.n);
       return { ...s, drawn, used: new Set([...s.used, drawn.question.id]), selected: null, hidden: [], poll: null, timeLeft: st.seconds, lifelines: { ...s.lifelines, rerun: false } };
     }
     case 'reset': return fresh();
@@ -110,7 +119,8 @@ function settle(s: State, choice: number | null, timedOut: boolean): State {
   const bonus = correct ? Math.round(st.points * SPEED_BONUS * Math.max(0, s.timeLeft) / st.seconds) : 0;
   const score = s.score + base + bonus;
   return {
-    ...s, phase: 'reveal', selected: choice, lastCorrect: correct, timedOut, timeLeft: 0,
+    ...s, phase: 'reveal', selected: choice, lastCorrect: correct, timedOut,
+    justWonPrize: s.score < PASS_SCORE && score >= PASS_SCORE,
     reached: correct ? s.stage + 1 : s.reached,
     score, banked: correct && st.checkpoint ? score : s.banked,
     lastGain: correct ? { base, bonus } : null,
@@ -127,6 +137,7 @@ const BEST_KEY = 'mig-best-stage';
 const BEST_SCORE_KEY = 'mig-best-score';
 export const loadBest = () => { try { return Number(localStorage.getItem(BEST_KEY)) || 0; } catch { return 0; } };
 export const loadBestScore = () => { try { return Number(localStorage.getItem(BEST_SCORE_KEY)) || 0; } catch { return 0; } };
+export const clearBest = () => { try { localStorage.removeItem(BEST_KEY); localStorage.removeItem(BEST_SCORE_KEY); } catch {} };
 export const saveBest = (n: number, score: number) => {
   try {
     if (n > loadBest()) localStorage.setItem(BEST_KEY, String(n));

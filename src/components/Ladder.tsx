@@ -24,7 +24,7 @@ export function LadderList({ cleared, current, compact = false }: { cleared: num
             <span className="step-n">{s.n}</span>
             <span className="step-name">{s.name}</span>
             <span className="step-pts mono">{s.points}</span>
-            <span className="step-mark">{done ? '✓' : s.checkpoint ? '🔒' : ''}</span>
+            <span className="step-mark">{done ? '✓' : s.checkpoint ? '⚑' : ''}</span>
           </motion.li>
         );
       })}

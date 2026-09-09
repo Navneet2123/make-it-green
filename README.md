@@ -55,7 +55,7 @@ Open **http://localhost:5174** and press **▶ Start the pipeline**.
 
 1. Read the question. The tier badge tells you how hard it is, the ring tells you how long you have.
 2. Tap an answer. It turns gold. Nothing is final yet.
-3. Press **🔒 Lock it in**. The correct answer goes green, yours goes red if it was not.
+3. Press **🔒 Lock it in**. The screen holds for a beat, then the correct answer goes green and yours goes red if it was not.
 4. Right answer → your build is promoted. Wrong answer, or the clock hits zero → the run ends.
 
 Keyboard: **A**–**D** to pick, **Enter** to lock and to continue.
@@ -68,37 +68,37 @@ Your running score sits beside the stage name, and your best score is remembered
 | --- | --- | --- | --- |
 | 1 Commit | easy | 30s | 50 |
 | 2 Lint | easy | 30s | 100 |
-| 3 Build 🔒 | easy | 30s | 150 |
+| 3 Build ⚑ | easy | 30s | 150 |
 | 4 Unit tests | easy | 25s | 200 |
 | 5 Integration | medium | 25s | 300 |
 | 6 API tests | medium | 25s | 400 |
-| 7 End-to-end 🔒 | medium | 22s | 500 |
+| 7 End-to-end ⚑ | medium | 22s | 500 |
 | 8 Staging | hard | 20s | 700 |
 | 9 Smoke test | hard | 20s | 900 |
 | 10 Production | hard | 20s | 1200 |
 
-🔒 marks a checkpoint. Clear it and you keep that stage and that score on your report even if a later question ends the run.
+⚑ marks a safe point. Clear it and that score is yours even if a later question ends the run.
 
 ### Scoring and the chocolate
 
 - Each correct answer earns the stage's points, plus a **speed bonus** of up to 50% for answering fast.
 - **Score 1000 or more and you have earned a chocolate.** That is roughly the easy tier plus one medium question.
-- A progress bar toward the chocolate appears after every stage, and the final report says plainly whether it was earned. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
+- A slim bar above every question shows your score and how far the chocolate is, and crossing 1000 takes over the screen so the whole room knows. The final report says plainly whether it was earned. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
 - A perfect, fast run scores **6750**.
 
 To make the prize easier or harder, change `PASS_SCORE` in [`src/lib/content.ts`](src/lib/content.ts). Point values per stage and the `SPEED_BONUS` share live there too.
 
 ### Restarting
 
-Press **⟲** in the header at any time to start a completely fresh run. It asks for confirmation and tells you the score you are about to lose, so a mis-tap during a timed question cannot wipe your progress.
+Press **⟲ New player** in the header at any time to start a completely fresh run. The clock pauses while the dialog is open. It asks for confirmation and tells you the score you are about to lose, so a mis-tap during a timed question cannot wipe your progress.
 
 ### Lifelines (once each per run)
 
 | Lifeline | What it does |
 | --- | --- |
-| ✂ **Bisect** | Removes two wrong answers, leaving a 50/50 |
+| ✂ **50:50** | Drops two wrong answers |
 | 👥 **Ask the team** | Shows how the team would vote. They are usually right |
-| ↻ **Rerun** | Swaps in a different question of the same difficulty and resets the clock |
+| ↻ **Swap question** | A different question of the same difficulty, and a fresh clock |
 
 ---
 
@@ -161,8 +161,9 @@ Stack: Vite, React 18, TypeScript, framer-motion. No backend.
 - The question card is dark with a gold glow for the game-show drama; everything around it stays
   light and calm. Chunky controls with hard shadows that press down. Reduced motion is respected.
 
-See [docs/AI-DLC.md](docs/AI-DLC.md) for the full development life cycle: the brief, an independent
-zero-knowledge playtest, and the team review that produced this format.
+See [docs/AI-DLC.md](docs/AI-DLC.md) for the full development life cycle: the brief, two independent
+zero-knowledge playtests by reviewers who had never seen the game, and the team reviews that produced
+this format.
 
 ## Deploy
 

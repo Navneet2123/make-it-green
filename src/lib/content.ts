@@ -6,6 +6,8 @@ export type Tier = 'easy' | 'medium' | 'hard';
 export interface Question {
   id: string;
   tier: Tier;
+  /** Introduces an idea the later questions assume. Drawn first, at stages 1 and 2. */
+  foundation?: boolean;
   q: string;
   options: string[];
   answer: number;   // index into options
@@ -16,6 +18,7 @@ export interface Question {
 export interface Stage {
   n: number;        // 1-based rung
   name: string;
+  sub: string;      // what that stage means, in plain English
   tier: Tier;
   seconds: number;
   points: number;   // base points for clearing this stage
@@ -29,31 +32,31 @@ export const SPEED_BONUS = 0.5;
 
 /** The ladder is a build pipeline. Every right answer promotes the build one stage. */
 export const LADDER: Stage[] = [
-  { n: 1, name: 'Commit', tier: 'easy', seconds: 30, points: 50 },
-  { n: 2, name: 'Lint', tier: 'easy', seconds: 30, points: 100 },
-  { n: 3, name: 'Build', tier: 'easy', seconds: 30, points: 150, checkpoint: true },
-  { n: 4, name: 'Unit tests', tier: 'easy', seconds: 25, points: 200 },
-  { n: 5, name: 'Integration', tier: 'medium', seconds: 25, points: 300 },
-  { n: 6, name: 'API tests', tier: 'medium', seconds: 25, points: 400 },
-  { n: 7, name: 'End-to-end', tier: 'medium', seconds: 22, points: 500, checkpoint: true },
-  { n: 8, name: 'Staging', tier: 'hard', seconds: 20, points: 700 },
-  { n: 9, name: 'Smoke test', tier: 'hard', seconds: 20, points: 900 },
-  { n: 10, name: 'Production', tier: 'hard', seconds: 20, points: 1200 },
+  { n: 1, name: 'Commit', sub: 'your work goes in', tier: 'easy', seconds: 30, points: 50 },
+  { n: 2, name: 'Lint', sub: 'the tidiness check', tier: 'easy', seconds: 30, points: 100 },
+  { n: 3, name: 'Build', sub: 'it all fits together', tier: 'easy', seconds: 30, points: 150, checkpoint: true },
+  { n: 4, name: 'Unit tests', sub: 'each small piece works', tier: 'easy', seconds: 25, points: 200 },
+  { n: 5, name: 'Integration', sub: 'the pieces work together', tier: 'medium', seconds: 25, points: 300 },
+  { n: 6, name: 'API tests', sub: 'the server answers correctly', tier: 'medium', seconds: 25, points: 400 },
+  { n: 7, name: 'End-to-end', sub: 'a whole customer journey', tier: 'medium', seconds: 22, points: 500, checkpoint: true },
+  { n: 8, name: 'Staging', sub: 'a rehearsal copy of the site', tier: 'hard', seconds: 20, points: 700 },
+  { n: 9, name: 'Smoke test', sub: 'the basics still work', tier: 'hard', seconds: 20, points: 900 },
+  { n: 10, name: 'Production', sub: 'live, in front of customers', tier: 'hard', seconds: 20, points: 1200 },
 ];
 
 export const MAX_SCORE = LADDER.reduce((n, s) => n + Math.round(s.points * (1 + SPEED_BONUS)), 0);
 
 export const BANK: Question[] = [
   // ---------------- EASY ----------------
-  { id: 'e1', tier: 'easy', concept: 'Automation',
+  { id: 'e1', tier: 'easy', foundation: true, concept: 'Automation',
     q: 'Sam logs in and checks the dashboard 50 times a day, every day. Why is this worth automating?',
     options: ['It is repetitive and the steps never change', 'It is the hardest part of testing', 'Robots enjoy it', 'It uses less electricity'],
     answer: 0, explain: 'Repetitive, predictable work is exactly what a computer does well: the same steps, the same way, every time.' },
-  { id: 'e2', tier: 'easy', concept: 'Automation',
+  { id: 'e2', tier: 'easy', foundation: true, concept: 'Automation',
     q: 'In one line, what is test automation?',
     options: ['Clicking through the app faster', 'Getting a computer to run test steps for you', 'Writing fewer tests', 'Testing only after release'],
     answer: 1, explain: 'A computer repeats the steps you taught it, without getting tired or bored. That is the whole idea.' },
-  { id: 'e3', tier: 'easy', concept: 'Manual vs automated',
+  { id: 'e3', tier: 'easy', foundation: true, concept: 'Manual vs automated',
     q: 'Which job should stay with a human?',
     options: ['Filling a form with 200 email addresses', 'Logging in after every code change', 'Deciding whether the new checkout screen feels confusing', 'Checking 50 product pages load'],
     answer: 2, explain: 'Judgement and taste stay human. Repetition goes to the robot.' },
@@ -61,11 +64,11 @@ export const BANK: Question[] = [
     q: 'What is a test script?',
     options: ['A bug report', 'A screenshot of the app', 'The name of the tester', 'The list of steps the tool follows, in order'],
     answer: 3, explain: 'Open, type, click, check. A script is just that list, and the robot follows it top to bottom.' },
-  { id: 'e5', tier: 'easy', concept: 'Locator',
+  { id: 'e5', tier: 'easy', foundation: true, concept: 'Locator',
     q: 'A robot cannot see the screen. So how does it find the Log in button?',
     options: ['By an address called a locator', 'By taking a photo', 'By guessing where it usually sits', 'It asks the user'],
     answer: 0, explain: 'Every button and box has a code name. The address built from it is called a locator.' },
-  { id: 'e6', tier: 'easy', concept: 'Test case',
+  { id: 'e6', tier: 'easy', foundation: true, concept: 'Test case',
     q: 'What is a test case?',
     options: ['A folder of screenshots', 'The steps to perform plus the result you expect', 'A list of known bugs', 'The box the software ships in'],
     answer: 1, explain: 'Steps plus expected result. Without the expected result you are just clicking around.' },
@@ -80,11 +83,11 @@ export const BANK: Question[] = [
 
   // ---------------- MEDIUM ----------------
   { id: 'm1', tier: 'medium', concept: 'Locator',
-    q: 'What does the locator #login point to?',
+    q: 'What does the locator `#login` point to?',
     options: ['Any element containing the word login', 'The element whose id is login', 'The first button on the page', 'A comment in the code'],
     answer: 1, explain: '# means "the thing whose id is…". Ids are meant to be unique, which makes them reliable addresses.' },
   { id: 'm2', tier: 'medium', concept: 'XPath',
-    q: "What does //input[@name='password'] find?",
+    q: "XPath writes an address as a path. What does `//input[@name='password']` find?",
     options: ['A text box whose name is password', 'Every input on the page', 'The word "password" wherever it appears', 'A link called password'],
     answer: 0, explain: "// = anywhere on the page · input = a text box · [@name='password'] = named password." },
   { id: 'm3', tier: 'medium', concept: 'Assertion',
@@ -122,11 +125,11 @@ export const BANK: Question[] = [
     options: ['It passes, the meaning is the same', 'It passes with a warning', 'It fails, to a robot those are different words', 'The test is skipped'],
     answer: 2, explain: 'Robots are literal. A lowercase s makes it a different word, so the assertion fails.' },
   { id: 'h2', tier: 'hard', concept: 'Debugging',
-    q: 'A test goes red. You try the app by hand and it works perfectly. Most likely cause?',
-    options: ['The test itself is wrong', 'The app is broken anyway', 'The internet is down', 'The test should be deleted'],
+    q: 'A test goes red. You try the app by hand and it works perfectly. What is the most likely cause?',
+    options: ['The test itself is wrong', 'The app is broken anyway', 'The office wifi is down', 'The browser needs updating'],
     answer: 0, explain: 'Tests have bugs too: a typo in a locator, a misspelled expected value, a missing wait.' },
   { id: 'h3', tier: 'hard', concept: 'Locator',
-    q: 'Why is //div[3]/span[2]/button a poor locator?',
+    q: 'Why is `//div[3]/span[2]/button` a poor locator?',
     options: ['It is too short', 'Any small layout change breaks it', 'It only works in one browser', 'It is not valid XPath'],
     answer: 1, explain: 'It describes a position, not a thing. Move one element and the address points somewhere else.' },
   { id: 'h4', tier: 'hard', concept: 'Debugging',
@@ -161,6 +164,16 @@ export const RANKS = [
 
 export const CONCEPTS = ['Automation', 'Manual vs automated', 'Test case', 'Script', 'Locator', 'XPath', 'Assertion', 'Pass / fail', 'Debugging'];
 
+/** Question ids seen in recent runs, so a restart really does bring different questions. */
+const SEEN_KEY = 'mig-seen';
+export const loadSeen = (): string[] => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'); } catch { return []; } };
+export const rememberSeen = (ids: string[]) => {
+  try {
+    const keep = [...ids, ...loadSeen()].slice(0, 8);
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set(keep)]));
+  } catch {}
+};
+
 /** Fisher-Yates with a seed so a run is reproducible within itself. */
 export function shuffle<T>(arr: T[], seed = Math.random() * 1e9): T[] {
   const a = [...arr];
@@ -173,11 +186,25 @@ export function shuffle<T>(arr: T[], seed = Math.random() * 1e9): T[] {
 
 export interface Drawn { question: Question; order: number[]; answer: number }
 
-/** Pick one random unused question of a tier, and shuffle its options. */
-export function draw(tier: Tier, used: Set<string>): Drawn {
-  const pool = BANK.filter((q) => q.tier === tier && !used.has(q.id));
-  const source = pool.length ? pool : BANK.filter((q) => q.tier === tier);
-  const question = shuffle(source)[0];
+/**
+ * Pick a random question of the right tier, shuffling the options too.
+ * Stages 1-2 prefer the questions that introduce an idea, so nothing is asked
+ * about a word the player has not met yet. Questions seen in recent runs are
+ * held back so a restart genuinely feels different.
+ */
+export function draw(tier: Tier, used: Set<string>, stage = 99): Drawn {
+  const ofTier = BANK.filter((q) => q.tier === tier && !used.has(q.id));
+  const seen = new Set(loadSeen());
+  const pick = (list: Question[]) => {
+    const fresh = list.filter((q) => !seen.has(q.id));
+    return fresh.length ? fresh : list;
+  };
+  let source: Question[] = [];
+  if (stage <= 2) source = ofTier.filter((q) => q.foundation);
+  if (!source.length) source = ofTier.filter((q) => stage > 2 || !q.foundation);
+  if (!source.length) source = ofTier;
+  if (!source.length) source = BANK.filter((q) => q.tier === tier);
+  const question = shuffle(pick(source))[0];
   const order = shuffle([0, 1, 2, 3]);
   return { question, order, answer: order.indexOf(question.answer) };
 }

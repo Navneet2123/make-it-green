@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CONCEPTS, LADDER, MAX_SCORE, PASS_SCORE } from './lib/content';
-import { checkpointFor, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
+import { CONCEPTS, LADDER, PASS_SCORE } from './lib/content';
+import { checkpointFor, clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
 import { isMuted, setMuted, sfx } from './lib/audio';
 import { Timer } from './components/Timer';
 import { LadderList, LadderRail } from './components/Ladder';
@@ -13,6 +13,7 @@ export default function App() {
   const [s, dispatch] = useReducer(reduce, undefined, fresh);
   const [muted, setMutedState] = useState(isMuted());
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [, setBestNonce] = useState(0);
   const stage = LADDER[s.stage];
   const playing = s.phase === 'question';
   const lastTick = useRef(0);
@@ -32,6 +33,18 @@ export default function App() {
     if (whole !== lastTick.current && whole <= 5 && whole > 0) { lastTick.current = whole; sfx.tickUrgent(); }
   }, [s.timeLeft, playing]);
 
+  // The KBC beat: after locking in, hold for a moment before the answer is shown.
+  useEffect(() => {
+    if (s.phase !== 'locking') return;
+    sfx.suspense();
+    const id = setTimeout(() => dispatch({ type: 'reveal' }), 1100);
+    return () => clearTimeout(id);
+  }, [s.phase]);
+
+  // A dialog freezes the clock, and never lingers over a run that ended underneath it.
+  useEffect(() => { dispatch({ type: 'pause', on: confirmRestart }); }, [confirmRestart]);
+  useEffect(() => { if (s.phase !== 'question') setConfirmRestart(false); }, [s.phase]);
+
   // Sounds on reveal.
   useEffect(() => {
     if (s.phase === 'reveal') { s.lastCorrect ? sfx.pass() : sfx.fail(); }
@@ -43,6 +56,7 @@ export default function App() {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
+      if (confirmRestart) return;
       if (s.phase === 'question') {
         const i = ['a', 'b', 'c', 'd'].indexOf(k);
         if (i >= 0) { sfx.select(); dispatch({ type: 'select', i }); }
@@ -51,7 +65,7 @@ export default function App() {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [s.phase, s.selected]);
+  }, [s.phase, s.selected, confirmRestart]);
 
   const toggleMute = () => { setMuted(!muted); setMutedState(!muted); };
   const inGame = s.phase !== 'intro' && s.phase !== 'over';
@@ -62,27 +76,29 @@ export default function App() {
         {inGame ? <LadderRail stage={s.stage} cleared={s.reached} /> : <div className="brand">make it <b>green</b></div>}
         <div className="top-right">
           {inGame && <Timer left={s.timeLeft} total={stage.seconds} paused={s.phase !== 'question'} />}
-          {s.phase !== 'intro' && <button className="icon" onClick={() => setConfirmRestart(true)} aria-label="Restart from the beginning" title="Restart">⟲</button>}
+          {s.phase !== 'intro' && <button className="icon restart" onClick={() => setConfirmRestart(true)} aria-label="Restart from the beginning">⟲<span>New player</span></button>}
           <button className="icon" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? '🔇' : '🔊'}</button>
         </div>
       </header>
 
       <main className="stage">
         <div className="stage-inner" key={`${s.phase}-${s.stage}-${s.drawn?.question.id ?? ''}`}>
-          {s.phase === 'intro' && <motion.section {...enter}><Intro onStart={() => { sfx.stageUp(); dispatch({ type: 'start' }); }} /></motion.section>}
+          {s.phase === 'intro' && <motion.section {...enter}><Intro onStart={() => { sfx.stageUp(); dispatch({ type: 'start' }); }} onClearBest={() => { clearBest(); setBestNonce((n) => n + 1); }} /></motion.section>}
 
-          {(s.phase === 'question' || s.phase === 'reveal') && s.drawn && (
+          {(s.phase === 'question' || s.phase === 'locking' || s.phase === 'reveal') && s.drawn && (
             <motion.section {...enter}>
               <div className="qhead">
                 <span className="qstage mono"><i className={`tier ${stage.tier}`} />stage {stage.n} · {stage.name}</span>
-                <span className="scorepill" aria-label={`${s.score} points`}>★ {s.score}</span>
                 <span className={`tierpill ${stage.tier}`}>{stage.tier}</span>
               </div>
+              <p className="qsub">{stage.sub} · worth {stage.points} points</p>
+              <ChocolateBar score={s.score} slim />
               <div className="play-cols">
                 <div className="play-main">
                   <QuestionCard drawn={s.drawn} selected={s.selected} hidden={s.hidden} poll={s.poll}
-                    revealed={s.phase === 'reveal'} correctIndex={s.drawn.answer}
+                    revealed={s.phase === 'reveal'} locking={s.phase === 'locking'} correctIndex={s.drawn.answer}
                     onSelect={(i) => dispatch({ type: 'select', i })} />
+                  {s.phase === 'locking' && <p className="locking-note">🔒 Locked in. Let's see…</p>}
                   {s.phase === 'question' && (
                     <>
                       <LifelineBar lifelines={s.lifelines} disabled={false}
@@ -105,6 +121,18 @@ export default function App() {
       </main>
 
       <AnimatePresence>
+        {s.justWonPrize && (
+          <motion.div className="prize-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => dispatch({ type: 'prizeSeen' })}>
+            <Confetti />
+            <motion.div className="prize-burst" initial={{ scale: 0.5, rotate: -6 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 18 }}>
+              <div className="prize-choc">🍫</div>
+              <h2>That's a chocolate.</h2>
+              <p>You passed {PASS_SCORE} points. Whatever happens next, it is yours.</p>
+              <button className="btn primary big" onClick={() => dispatch({ type: 'prizeSeen' })}>Keep climbing</button>
+            </motion.div>
+          </motion.div>
+        )}
         {confirmRestart && (
           <motion.div className="modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmRestart(false)}>
             <motion.div className="modal-card" initial={{ scale: 0.9, y: 14 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
@@ -137,21 +165,26 @@ export default function App() {
   );
 }
 
-function Intro({ onStart }: { onStart: () => void }) {
+function Intro({ onStart, onClearBest }: { onStart: () => void; onClearBest: () => void }) {
   const best = loadBest();
   return (
     <div className="intro">
       <div className="eyebrow mono">10 questions · one shot each · 5 minutes</div>
       <h1>Make it <span className="green">green</span>.</h1>
       <p className="lede">Answer to promote the build. Ten questions, harder every stage, a timer on every one. Get one wrong and the pipeline goes red.</p>
-      <div className="intro-ladder">
-        <LadderList cleared={0} compact />
+      <div className="intro-scale">
+        <div className="scale-row"><b>50</b><span className="scale-bar"><i style={{ left: `${(PASS_SCORE / 4500) * 100}%` }} /></span><b>1200</b></div>
+        <div className="scale-legend"><span>stage 1</span><span className="choc-mark">🍫 {PASS_SCORE}</span><span>stage 10</span></div>
       </div>
       <div className="intro-rules">
         <span>⏱ 30s → 20s</span><span>🔒 one answer only</span><span>🎲 random questions</span><span>✂ 3 lifelines</span>
       </div>
       <div className="prize">🍫 Score <b>{PASS_SCORE}</b> or more and you have earned a chocolate. Answer fast for bonus points.</div>
-      {best > 0 && <p className="fine left">Your best: stage {best} · {LADDER[best - 1].name} · ★ {loadBestScore()}</p>}
+      {best > 0 && (
+        <p className="fine left">Best on this device: stage {best} · {LADDER[best - 1].name} · ★ {loadBestScore()}
+          {' '}<button className="linkbtn" onClick={onClearBest}>clear</button>
+        </p>
+      )}
       <button className="btn primary big" onClick={onStart}>▶ Start the pipeline</button>
       <p className="fine">No sign-up. Works on your phone. Sound on is nicer.</p>
     </div>
@@ -173,22 +206,24 @@ function StageClear({ stage, cleared, score, gain, onNext }: { stage: number; cl
         </motion.div>
       )}
       <ChocolateBar score={score} />
-      {prev.checkpoint && <div className="cp-badge">🔒 Checkpoint reached — you keep this score even if the next one fails</div>}
+      {prev.checkpoint && <div className="cp-badge">⚑ Safe point reached — this score is yours even if the next question ends the run</div>}
       <LadderList cleared={cleared} current={stage} compact />
-      <button className="btn primary big" onClick={onNext}>Next: {st.name} <span className="mono kbd">↵</span></button>
+      <div className="sticky-cta">
+        <button className="btn primary big" onClick={onNext}>Next: {st.name} · {st.points} pts <span className="mono kbd">↵</span></button>
+      </div>
     </div>
   );
 }
 
 /** Progress toward the chocolate. The whole point of the score for a room full of people. */
-function ChocolateBar({ score, big = false }: { score: number; big?: boolean }) {
+function ChocolateBar({ score, big = false, slim = false }: { score: number; big?: boolean; slim?: boolean }) {
   const won = wonChocolate(score);
   const pct = Math.min(100, (score / PASS_SCORE) * 100);
   return (
-    <div className={`choc ${won ? 'won' : ''} ${big ? 'big' : ''}`}>
+    <div className={`choc ${won ? 'won' : ''} ${big ? 'big' : ''} ${slim ? 'slim' : ''}`}>
       <div className="choc-top">
-        <span>🍫 {won ? 'Chocolate earned' : `${PASS_SCORE - score} points to a chocolate`}</span>
-        <span className="mono">{won ? 'target passed' : `${score} / ${PASS_SCORE}`}</span>
+        <span>★ {score} · 🍫 {won ? 'chocolate secured' : `${PASS_SCORE - score} more for a chocolate`}</span>
+        {!slim && <span className="mono">{won ? 'target passed' : `${score} / ${PASS_SCORE}`}</span>}
       </div>
       <div className="choc-track"><motion.div className="choc-fill" initial={false} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }} /></div>
     </div>
@@ -218,23 +253,27 @@ function Report({ s, onReplay }: { s: ReturnType<typeof reduce>; onReplay: () =>
       <p className="report-sub">{s.won ? 'Ten questions, ten green stages. Nobody does that by accident.' : `You cleared ${cleared} of 10 stages${cp ? ` and banked the ${LADDER[cp - 1].name} checkpoint` : ''}. Different questions next run.`}</p>
       <div className={`scorebox ${won ? 'won' : ''}`}>
         <div className="eyebrow mono">final score</div>
-        <div className="scorebig">★ {s.score}<span className="scoremax mono">/ {MAX_SCORE}</span></div>
+        <div className="scorebig">★ {s.score}</div>
         {won
           ? <div className="prize-won">🍫 Chocolate earned — show this screen to claim it</div>
           : <div className="prize-miss">🍫 {PASS_SCORE - s.score} points short. One more run?</div>}
       </div>
-      <ChocolateBar score={s.score} big />
+      {!won && <ChocolateBar score={s.score} big />}
       <div className="summary">
-        <div className="stat"><b className="green">{cleared}</b><span>stages</span></div>
-        <div className="stat"><b>{right}/{s.answers.length}</b><span>correct</span></div>
+        <div className="stat"><b className="green">{cleared}/10</b><span>stages</span></div>
+        <div className="stat"><b>{right}</b><span>correct</span></div>
         <div className="stat"><b>{time}</b><span>time</span></div>
-        <div className="stat"><b>🔒{s.banked}</b><span>banked</span></div>
       </div>
       <LadderList cleared={cleared} compact />
       <div className="rank"><div className="eyebrow mono">your rank</div><b>{rank.name}</b><p>{rank.line}</p></div>
       <div className="learned">
-        <div className="eyebrow mono">the nine ideas</div>
-        <div className="chips static">{CONCEPTS.map((c) => <span key={c} className={`chip ${s.answers.some((a) => a.concept === c && a.correct) ? 'got' : ''}`}>{c}</span>)}</div>
+        <div className="eyebrow mono">ideas you got right</div>
+        <div className="chips static">{CONCEPTS.map((c) => {
+          const asked = s.answers.some((a) => a.concept === c);
+          const got = s.answers.some((a) => a.concept === c && a.correct);
+          return <span key={c} className={`chip ${got ? 'got' : asked ? 'miss' : ''}`}>{got ? '✓ ' : ''}{c}</span>;
+        })}</div>
+        <p className="fine left">Faded ideas did not come up this run. A new run draws different questions.</p>
       </div>
       <div className="two">
         <button className="btn primary big" onClick={onReplay}>⟲ Restart</button>

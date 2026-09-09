@@ -153,9 +153,64 @@ infuriating. The report's button is now labelled Restart too, so the wording mat
 Both are tuned in one place: `PASS_SCORE`, `SPEED_BONUS` and each stage's `points` live in
 `src/lib/content.ts`, so the bar can be moved for an easier or harder chocolate.
 
-## 7. Iteration log
+## 7. Second independent review → v2.2
+
+The KBC rebuild had only ever been tested by its author. A second reviewer agent played it cold as
+**"Arjun, 24, a graphic designer who has never heard the phrase test automation and watches KBC with
+his family"**, over three runs, and was told only what a player at the event would be told: *score
+1000 and you win a chocolate*. Scores: **beauty 8/10, clarity 5/10**. He could explain automation and
+locators back in his own words afterwards, and was honest that he had reverse-engineered "assertion"
+from the feedback screens rather than being taught it.
+
+His verdict on the core mechanic was the useful part: *"The two-step lock-in is the single best thing
+in the game… I actually hesitated before pressing it."* And then: *"No drama at the moment of truth.
+You press Lock it in and the answer just appears."*
+
+### Bugs he found that the author's own testing missed
+
+| Bug | Fix |
+| --- | --- |
+| The countdown kept running behind the restart dialog, killing a run while the dialog still offered "Keep playing" | A dialog now pauses the clock, and closes itself if the run ends underneath it |
+| The timer snapped to **0** the instant you answered, so a fast answer looked identical to a timeout | The ring now freezes on the time you had left — the number that earned the bonus |
+| The intro ladder was clipped at 232px with 493px of content and could not be scrolled, hiding stages 1–6 | Replaced with a single points scale, 50 → 1200, with the chocolate line marked on it |
+| "Next: Lint" sat below the fold on every one of the ten between-stage screens | The continue button is now a sticky footer |
+| "Different questions next run" was not true — a restart re-served the same question | Recent question ids are remembered across runs, and the opening pool was widened from 3 to 5 |
+
+### Clarity fixes
+
+- **The chocolate target vanished during play.** It only appeared between stages, where it was needed
+  least. A slim bar now sits above every question: *"★ 661 · 🍫 339 more for a chocolate"*.
+- **Winning the chocolate was smaller than the points popup.** Crossing 1000 now takes over the
+  screen: 🍫, *"That's a chocolate."*, *"Whatever happens next, it is yours."*
+- **Contradictory numbers on the report.** "★ 5910 / 6750" (6750 was never explained), "🔒2213 BANKED"
+  on a perfect run, and the chocolate stated twice in 40 pixels. Now one score, one verdict, three stats.
+- **Lifeline names were in a language only the authors speak.** "Bisect" → **50:50**, "Rerun" →
+  **Swap question**, each with a visible one-line description instead of a `title` tooltip that no
+  touchscreen ever shows. "Rerun" also collided with a wrong answer in one of the questions.
+- **The restart button was an unlabelled 36px "⟲" that he never found**, and looked for at the bottom
+  of the screen. It is now a 44px pill reading **⟲ New player** — because at an event, the person who
+  needs it most is the next player in the queue.
+- **The padlock meant four different things.** Checkpoints now use ⚑ and are called safe points; 🔒
+  only ever means locking in an answer.
+- **Stage names were mystique with no meaning** ("Lint especially. Is that the fluff from a pocket?").
+  Every stage now carries a plain-English line: *Lint · the tidiness check*.
+- **Raw code read as broken prose.** ``//input[@name='password']`` now renders as a monospace chip,
+  and the XPath question introduces the word before asking.
+- **Questions could assume a word not yet met.** Concept-introducing questions are flagged and drawn
+  at stages 1–2.
+- **One ambiguous question**: "A test goes red… most likely cause?" had "The test should be deleted"
+  as an option, which is an action, not a cause. All four options are causes now.
+- Best score is labelled **"Best on this device"** with a clear button, so a shared event screen does
+  not greet each new player with a stranger's score.
+
+Two of his points were left as they are: the "no sound" complaint is an artefact of the review
+environment having no audio output (the sounds are synthesised and do fire), and the localhost URL in
+the share text becomes the real URL once deployed.
+
+## 8. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
 - v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.
+- v2.2 — second independent playtest (see §7): suspense beat on lock-in, full-screen chocolate moment, always-visible target, paused dialog, frozen timer, sticky continue, plain-English stages and lifelines, no repeat questions.

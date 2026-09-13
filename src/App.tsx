@@ -4,7 +4,7 @@ import { CONCEPTS, LADDER, PASS_SCORE } from './lib/content';
 import { checkpointFor, clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
 import { isMuted, setMuted, sfx } from './lib/audio';
 import { Timer } from './components/Timer';
-import { LadderList, LadderRail } from './components/Ladder';
+import { LadderList, LadderRail, ProgressRow } from './components/Ladder';
 import { LifelineBar, QuestionCard } from './components/Question';
 
 const enter = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.26, ease: [0.2, 0.8, 0.2, 1] } };
@@ -205,9 +205,9 @@ function StageClear({ stage, cleared, score, gain, onNext }: { stage: number; cl
           <span className="gain-total">★ {score}</span>
         </motion.div>
       )}
+      <ProgressRow cleared={cleared} current={stage} />
       <ChocolateBar score={score} />
       {prev.checkpoint && <div className="cp-badge">⚑ Safe point reached — this score is yours even if the next question ends the run</div>}
-      <LadderList cleared={cleared} current={stage} compact />
       <div className="sticky-cta">
         <button className="btn primary big" onClick={onNext}>Next: {st.name} · {st.points} pts <span className="mono kbd">↵</span></button>
       </div>

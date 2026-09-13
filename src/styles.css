@@ -178,6 +178,19 @@ h2 { font-family: var(--display); font-size: clamp(34px, 9vw, 44px); line-height
 .confetti span { position: absolute; top: -20px; border-radius: 2px; animation: fall linear forwards; }
 @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
 
+/* ---------- progress strip between stages ---------- */
+.progress { margin: 16px 0 14px; }
+.progress-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.progress-head b { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em; }
+.progress-head span { font-weight: 700; color: var(--muted); font-size: 15px; }
+.dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.dot-n { display: grid; place-items: center; aspect-ratio: 1; border-radius: 9px; border: 2px solid var(--ink); background: var(--card); font: 700 12px var(--mono); color: var(--muted); }
+.dot-n.done { background: var(--pass); color: var(--ink); font-size: 13px; }
+.dot-n.next { background: var(--gold); color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.dot-n.cp { border-style: dashed; }
+.progress-next { margin-top: 10px; font-size: 14.5px; color: var(--muted); font-weight: 600; }
+.progress-next b { color: var(--ink); }
+
 /* ---------- v2.2: review fixes ---------- */
 .icon.restart { width: auto; min-height: 44px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; font: 800 13px var(--display); }
 .icon.restart span { white-space: nowrap; }

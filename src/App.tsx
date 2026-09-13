@@ -4,7 +4,7 @@ import { CONCEPTS, LADDER, PASS_SCORE } from './lib/content';
 import { checkpointFor, clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
 import { isMuted, setMuted, sfx } from './lib/audio';
 import { Timer } from './components/Timer';
-import { LadderList, LadderRail, ProgressRow } from './components/Ladder';
+import { LadderList, LadderRail } from './components/Ladder';
 import { LifelineBar, QuestionCard } from './components/Question';
 
 const enter = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.26, ease: [0.2, 0.8, 0.2, 1] } };
@@ -44,11 +44,11 @@ export default function App() {
   // A dialog freezes the clock, and never lingers over a run that ended underneath it.
   useEffect(() => { dispatch({ type: 'pause', on: confirmRestart }); }, [confirmRestart]);
   useEffect(() => { if (s.phase !== 'question') setConfirmRestart(false); }, [s.phase]);
+  useEffect(() => { if (s.phase === 'reveal' && s.lastCorrect && LADDER[s.stage].checkpoint) sfx.stageUp(); }, [s.phase]);
 
   // Sounds on reveal.
   useEffect(() => {
     if (s.phase === 'reveal') { s.lastCorrect ? sfx.pass() : sfx.fail(); }
-    if (s.phase === 'stageclear') sfx.stageUp();
     if (s.phase === 'over') { s.won ? sfx.report() : sfx.gameOver(); saveBest(s.reached, s.score); }
   }, [s.phase]);
 
@@ -61,7 +61,7 @@ export default function App() {
         const i = ['a', 'b', 'c', 'd'].indexOf(k);
         if (i >= 0) { sfx.select(); dispatch({ type: 'select', i }); }
         if (k === 'enter' && s.selected !== null) { sfx.lock(); dispatch({ type: 'lock' }); }
-      } else if (k === 'enter' && (s.phase === 'reveal' || s.phase === 'stageclear')) dispatch({ type: 'next' });
+      } else if (k === 'enter' && s.phase === 'reveal') dispatch({ type: 'next' });
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -115,7 +115,6 @@ export default function App() {
             </motion.section>
           )}
 
-          {s.phase === 'stageclear' && <motion.section {...enter}><StageClear stage={s.stage} cleared={s.reached} score={s.score} gain={s.lastGain} onNext={() => dispatch({ type: 'next' })} /></motion.section>}
           {s.phase === 'over' && <motion.section {...enter}><Report s={s} onReplay={() => dispatch({ type: 'reset' })} /></motion.section>}
         </div>
       </main>
@@ -150,9 +149,17 @@ export default function App() {
             initial={{ y: 220, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 180, opacity: 0, transition: { duration: 0.16 } }}
             transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
             <div className="sheet-inner">
-              <motion.div className="verdict" initial={{ scale: 0.7 }} animate={s.lastCorrect ? { scale: [0.7, 1.12, 1] } : { x: [0, -8, 8, -6, 6, 0], scale: 1 }} transition={{ duration: 0.45 }}>
-                {s.lastCorrect ? '✓ Correct' : s.timedOut && s.selected === null ? "⏱ Time's up" : '✗ Wrong'}
-              </motion.div>
+              <div className="verdict-row">
+                <motion.div className="verdict" initial={{ scale: 0.7 }} animate={s.lastCorrect ? { scale: [0.7, 1.12, 1] } : { x: [0, -8, 8, -6, 6, 0], scale: 1 }} transition={{ duration: 0.45 }}>
+                  {s.lastCorrect ? '✓ Correct' : s.timedOut && s.selected === null ? "⏱ Time's up" : '✗ Wrong'}
+                </motion.div>
+                {s.lastGain && (
+                  <motion.div className="verdict-pts" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 20, delay: 0.15 }}>
+                    +{s.lastGain.base}{s.lastGain.bonus > 0 && <i>⚡ +{s.lastGain.bonus}</i>}
+                  </motion.div>
+                )}
+              </div>
+              {s.lastCorrect && LADDER[s.stage].checkpoint && <div className="cp-note">⚑ Safe point — this score is yours even if the next question ends the run</div>}
               <p className="explain">{s.drawn.question.explain}</p>
               <button className="btn big on-pass" onClick={() => dispatch({ type: 'next' })}>
                 {s.lastCorrect ? (s.stage + 1 >= LADDER.length ? 'Ship it 🚀' : `Promote to ${LADDER[s.stage + 1].name}`) : 'See the damage'} <span className="mono kbd">↵</span>
@@ -187,30 +194,6 @@ function Intro({ onStart, onClearBest }: { onStart: () => void; onClearBest: () 
       )}
       <button className="btn primary big" onClick={onStart}>▶ Start the pipeline</button>
       <p className="fine">No sign-up. Works on your phone. Sound on is nicer.</p>
-    </div>
-  );
-}
-
-function StageClear({ stage, cleared, score, gain, onNext }: { stage: number; cleared: number; score: number; gain: { base: number; bonus: number } | null; onNext: () => void }) {
-  const st = LADDER[stage];
-  const prev = LADDER[stage - 1];
-  return (
-    <div className="clear">
-      <div className="eyebrow mono">build promoted</div>
-      <h2>{prev.name} <span className="green">✓</span></h2>
-      {gain && (
-        <motion.div className="gain" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 22 }}>
-          <span className="gain-base">+{gain.base}</span>
-          {gain.bonus > 0 && <span className="gain-bonus">⚡ +{gain.bonus} fast answer</span>}
-          <span className="gain-total">★ {score}</span>
-        </motion.div>
-      )}
-      <ProgressRow cleared={cleared} current={stage} />
-      <ChocolateBar score={score} />
-      {prev.checkpoint && <div className="cp-badge">⚑ Safe point reached — this score is yours even if the next question ends the run</div>}
-      <div className="sticky-cta">
-        <button className="btn primary big" onClick={onNext}>Next: {st.name} · {st.points} pts <span className="mono kbd">↵</span></button>
-      </div>
     </div>
   );
 }

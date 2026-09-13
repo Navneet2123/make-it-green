@@ -12,28 +12,6 @@ export function LadderRail({ stage, cleared }: { stage: number; cleared: number 
   );
 }
 
-/** Compact "where am I" strip: how many stages are cleared, and which one is next. */
-export function ProgressRow({ cleared, current }: { cleared: number; current: number }) {
-  return (
-    <div className="progress">
-      <div className="progress-head">
-        <motion.b key={cleared} initial={{ scale: 1.5, color: '#19C37D' }} animate={{ scale: 1, color: '#1B1F3B' }} transition={{ duration: 0.45 }}>{cleared}</motion.b>
-        <span>of {LADDER.length} stages cleared</span>
-      </div>
-      <div className="dots">
-        {LADDER.map((s, i) => (
-          <motion.span key={s.n}
-            className={['dot-n', i < cleared ? 'done' : '', i === current ? 'next' : '', s.checkpoint ? 'cp' : ''].join(' ')}
-            initial={false} animate={i === cleared - 1 ? { scale: [1, 1.35, 1] } : {}} transition={{ duration: 0.45 }}>
-            {i < cleared ? '✓' : s.n}
-          </motion.span>
-        ))}
-      </div>
-      <div className="progress-next">Next up: <b>{LADDER[current].name}</b> · {LADDER[current].sub}</div>
-    </div>
-  );
-}
-
 export function LadderList({ cleared, current, compact = false }: { cleared: number; current?: number; compact?: boolean }) {
   return (
     <ol className={`ladder ${compact ? 'compact' : ''}`}>

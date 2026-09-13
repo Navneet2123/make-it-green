@@ -60,7 +60,9 @@ Open **http://localhost:5174** and press **▶ Start the pipeline**.
 1. Read the question. The tier badge tells you how hard it is, the ring tells you how long you have.
 2. Tap an answer. It turns gold. Nothing is final yet.
 3. Press **🔒 Lock it in**. The screen holds for a beat, then the correct answer goes green and yours goes red if it was not.
-4. Right answer → your build is promoted. Wrong answer, or the clock hits zero → the run ends.
+4. Right answer → the verdict shows the points you earned and you go straight to the next question. Wrong answer, or the clock hits zero → the run ends.
+
+There is no scoreboard between questions. The full breakdown appears once, at the end.
 
 Keyboard: **A**–**D** to pick, **Enter** to lock and to continue.
 

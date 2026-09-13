@@ -1,6 +1,6 @@
 import { LADDER, PASS_SCORE, RANKS, SPEED_BONUS, draw, rememberSeen, type Drawn } from './content';
 
-export type Phase = 'intro' | 'question' | 'locking' | 'reveal' | 'stageclear' | 'over';
+export type Phase = 'intro' | 'question' | 'locking' | 'reveal' | 'over';
 
 export interface Lifelines { bisect: boolean; ask: boolean; rerun: boolean }
 
@@ -75,12 +75,12 @@ export function reduce(s: State, a: Action): State {
       if (s.phase === 'reveal' && s.lastCorrect) {
         const nextStage = s.stage + 1;
         if (nextStage >= LADDER.length) { rememberSeen([...s.used]); return { ...s, phase: 'over', won: true, finishedAt: Date.now() }; }
-        return { ...s, phase: 'stageclear', stage: nextStage };
-      }
-      if (s.phase === 'stageclear') {
-        const st = LADDER[s.stage];
+        const st = LADDER[nextStage];
         const drawn = draw(st.tier, s.used, st.n);
-        return { ...s, phase: 'question', drawn, used: new Set([...s.used, drawn.question.id]), selected: null, hidden: [], poll: null, timeLeft: st.seconds, timedOut: false };
+        return {
+          ...s, phase: 'question', stage: nextStage, drawn, used: new Set([...s.used, drawn.question.id]),
+          selected: null, hidden: [], poll: null, timeLeft: st.seconds, timedOut: false,
+        };
       }
       rememberSeen([...s.used]);
       return { ...s, phase: 'over', finishedAt: Date.now() };

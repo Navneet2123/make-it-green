@@ -207,10 +207,27 @@ Two of his points were left as they are: the "no sound" complaint is an artefact
 environment having no audio output (the sounds are synthesised and do fire), and the localhost URL in
 the share text becomes the real URL once deployed.
 
-## 8. Iteration log
+## 8. Flow review → v2.3
+
+> "This should not be visible. After we either fail it or complete the quiz we get the final score only."
+
+The screen between questions was cut. A run is now: question → lock in → verdict with the points
+earned → straight into the next question. The score summary appears once, at the end, whether the
+run ended in a wrong answer, a timeout, or a clean ten out of ten.
+
+The points did not disappear with the screen. They moved onto the verdict itself (`+300 ⚡ +120`
+beside "✓ Correct"), and the safe-point message appears there too when a checkpoint is cleared. The
+slim chocolate bar above each question stayed, since the whole reason the score exists is to tell a
+player at the event whether they have won one yet.
+
+Removing the interstitial takes about ten taps out of a ten-question run, which matters for a game
+whose promise is five minutes.
+
+## 9. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
 - v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.
+- v2.3 — flow review (see §8): no screen between questions; points ride on the verdict; the score summary appears only at the end.
 - v2.2 — second independent playtest (see §7): suspense beat on lock-in, full-screen chocolate moment, always-visible target, paused dialog, frozen timer, sticky continue, plain-English stages and lifelines, no repeat questions.

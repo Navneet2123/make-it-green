@@ -270,12 +270,32 @@ which suits a five-minute game better than it first appears.
 This required storing more per answer than a boolean, so the state keeps a record per question with
 the wording, both answers, the explanation and the points earned.
 
-## 11. Iteration log
+## 11. Event artwork → v3.2
+
+A QR code for the event, in the game's own style rather than a generic black grid: rounded modules
+that meet flush, the three eyes drawn as concentric rounded squares with green centres, and a badge
+in the middle carrying the green tick. Plus an A4 poster with the fonts embedded as base64, so it
+prints identically anywhere with no network and nothing installed.
+
+**The part that mattered was testing it.** The artwork was decoded with `jsQR` at sizes from 180px
+to 1600px, downscaled, blurred and rotated. The first version failed everywhere above 300px. A
+control test with a plain library-generated code passed at every size, which pointed at the styling
+rather than the decoder, and a variant sweep isolated it: not the rounded modules, not the centre
+badge, but **the brand green in the eye centres**.
+
+Scanners binarise the image at roughly 50% brightness before reading. `#19C37D` has a luma of 136
+against a threshold near 128, so the eye centres were being read as white and the finder patterns
+stopped resolving. Swapping to `#0E8A57` (luma 95), the green the game already uses for PASS text,
+fixed every size. A pretty code that does not scan is worse than an ugly one, and only the decode
+test caught it. The constraint is written into `qr/README.md` for whoever restyles it next.
+
+## 12. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
 - v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.
+- v3.2 — event artwork (see §11): styled QR code and printable A4 poster, decode-tested from 180px to 1600px.
 - v3.1 — team review (see §10): no right or wrong shown during play; the report carries a full per-question review.
 - v3.0 — team review (see §9): no elimination, all ten questions always asked, score revealed only at the end.
 - v2.3 — flow review (see §8): no screen between questions; points ride on the verdict; the score summary appears only at the end.

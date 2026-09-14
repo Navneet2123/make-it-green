@@ -6,6 +6,9 @@
 
 No install, no sign-up. Works on a phone.
 
+Running it at an event? [`qr/`](qr/) has a printable A4 poster and the QR code on
+its own, in the game's colours and decode-tested from thumbnail to poster size.
+
 **Make It Green** is a fast, beautiful, KBC-style quiz that teaches the basics of software test
 automation. Your suite runs ten tests, one per question, from **Commit** to **Production**. Each one
 comes out green or red, and at the end you get a single score.
@@ -189,6 +192,16 @@ To host your own copy:
 
 `npm run build` also produces a plain static `dist/` folder that works on Netlify, Vercel, Cloudflare
 Pages or any web server.
+
+## Running it at an event
+
+[`qr/`](qr/README.md) holds the scan artwork: an A4 poster with the fonts embedded, the code on its
+own as SVG, and a 2048px PNG. Regenerate any of it with `npm run qr`, or point it somewhere else
+with `node scripts/make-qr.mjs <url>`.
+
+One warning worth reading before restyling it: the three eye centres have to stay dark, because
+scanners flatten the image to black and white before reading. The full explanation is in the
+[QR readme](qr/README.md).
 
 ## License
 

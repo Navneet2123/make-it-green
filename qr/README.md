@@ -4,16 +4,25 @@ Scan targets **https://navneet2123.github.io/make-it-green/**
 
 | File | Use it for |
 | --- | --- |
-| `make-it-green-poster.svg` | Printing. A4 portrait, fonts embedded, no network needed. Send straight to a printer or open in any browser and print. |
+| `make-it-green-poster.pdf` | **Printing.** A4 portrait with the workonmymachine logo, fonts embedded, the code drawn as vector paths. Send straight to a printer or a print shop. |
+| `make-it-green-poster.svg` | The same poster without the logo, if you want to edit it in a design tool. |
 | `make-it-green-qr.svg` | Slides, docs, email signatures. Vector, so it stays sharp at any size. |
 | `make-it-green-qr.png` | Chat, Slack, anywhere that will not take an SVG. 2048 x 2048. |
+| `logo.png` | The workonmymachine mark, trimmed, as used on the poster. |
 
 Regenerate after changing the URL or the styling:
 
 ```bash
-npm run qr                                   # uses the published URL
-node scripts/make-qr.mjs https://example.com # or any other URL
+npm run qr      # the SVGs
+npm run qr:pdf  # the printable PDF
+
+# or point either at a different URL
+node scripts/make-qr.mjs https://example.com
+node scripts/make-qr-pdf.mjs https://example.com
 ```
+
+Both scripts download the fonts they need on first run and cache them in `qr/`
+(ignored by git), so the committed artwork needs nothing installed to view.
 
 ## Before you change the colours
 
@@ -37,6 +46,6 @@ can rebuild about 30% of a damaged code, and the badge covers under 4%.
 
 ## Printing
 
-Any size from about 3cm across upward scans fine. For a poster people read from
+The PDF is the one to print. Any size from about 3cm across upward scans fine. For a poster people read from
 across a room, A4 or larger is comfortable. Keep the white margin around the
 code, it is part of how scanners find it.

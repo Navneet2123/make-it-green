@@ -6,7 +6,7 @@
 
 No install, no sign-up. Works on a phone.
 
-Running it at an event? [`qr/`](qr/) has a printable A4 poster and the QR code on
+Running it at an event? [`qr/`](qr/) has a print-ready A4 poster PDF and the QR code on
 its own, in the game's colours and decode-tested from thumbnail to poster size.
 
 **Make It Green** is a fast, beautiful, KBC-style quiz that teaches the basics of software test
@@ -195,9 +195,9 @@ Pages or any web server.
 
 ## Running it at an event
 
-[`qr/`](qr/README.md) holds the scan artwork: an A4 poster with the fonts embedded, the code on its
-own as SVG, and a 2048px PNG. Regenerate any of it with `npm run qr`, or point it somewhere else
-with `node scripts/make-qr.mjs <url>`.
+[`qr/`](qr/README.md) holds the scan artwork: **an A4 poster PDF** ready for a printer, the same
+poster as SVG, the code on its own as SVG, and a 2048px PNG. Rebuild with `npm run qr` and
+`npm run qr:pdf`, or point either script at a different URL.
 
 One warning worth reading before restyling it: the three eye centres have to stay dark, because
 scanners flatten the image to black and white before reading. The full explanation is in the

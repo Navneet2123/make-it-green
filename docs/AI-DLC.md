@@ -223,11 +223,37 @@ player at the event whether they have won one yet.
 Removing the interstitial takes about ten taps out of a ten-question run, which matters for a game
 whose promise is five minutes.
 
-## 9. Iteration log
+## 9. Team review → v3.0 (every question, one score)
+
+> "The user is asked all 10 questions then give the final score. They want it to just have the final
+> score at the end, not anything else. They will be asked all ten questions in the flow, simple."
+
+Two changes, and together they replace the game's spine.
+
+**Elimination is gone.** A wrong answer used to end the run, which meant a player could be finished
+in forty seconds having seen one question. Now all ten are always asked. That also fixes the thing
+the second playtester was most annoyed by: *"About sixty seconds of my life and zero chocolate. At a
+company event I'd hand the phone to the next person and walk off."*
+
+**No score until the end.** The running total, the chocolate bar above each question and the points
+on each verdict were all removed. During a run you see the question, the clock, and whether your
+answer was right with one line of why. The score appears exactly once.
+
+The metaphor survived the change, and arguably got truer. A pipeline that stops at the first red
+was always a little off; a real suite runs every test and reports at the end. So the ladder is now
+ten tests that each come out green or red, the header strip fills in with both colours, and the
+report leads with the score and "7 of 10 tests green".
+
+Consequences cleaned up: safe points had nothing left to protect, so checkpoints and the banked
+score were removed. Ranks are now keyed to how many came out green rather than how far you climbed.
+The share text became a green and red square per question.
+
+## 10. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
 - v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.
+- v3.0 — team review (see §9): no elimination, all ten questions always asked, score revealed only at the end.
 - v2.3 — flow review (see §8): no screen between questions; points ride on the verdict; the score summary appears only at the end.
 - v2.2 — second independent playtest (see §7): suspense beat on lock-in, full-screen chocolate moment, always-visible target, paused dialog, frozen timer, sticky continue, plain-English stages and lifelines, no repeat questions.

@@ -41,6 +41,7 @@ body.has-sheet .stage { padding-bottom: 240px; }
 .rail { display: flex; gap: 4px; align-items: center; flex: 1; min-width: 0; }
 .rung { height: 10px; flex: 1 1 auto; min-width: 5px; max-width: 26px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); transition: background .3s; }
 .rung.done { background: var(--pass); }
+.rung.miss { background: var(--fail); }
 .rung.now { background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
 .rung.cp { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
 @keyframes pulse { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.7); } }
@@ -50,6 +51,11 @@ body.has-sheet .stage { padding-bottom: 240px; }
 .step-n { width: 26px; height: 26px; border-radius: 8px; background: var(--tint); display: grid; place-items: center; font: 700 12px var(--mono); }
 .step.done { background: var(--pass-soft); border-color: var(--pass); }
 .step.done .step-n { background: var(--pass); color: var(--ink); }
+.step.missed { background: var(--fail-soft); border-color: var(--fail); }
+.step.missed .step-n { background: var(--fail); color: #fff; }
+.step.missed .step-mark { color: var(--fail); }
+.step.skipped { opacity: .5; }
+.step.skipped .step-mark { color: var(--muted); }
 .step.now { background: var(--gold); box-shadow: 0 3px 0 var(--ink); }
 .step.now .step-n { background: var(--ink); color: #fff; }
 .step.cp { border-style: dashed; }
@@ -77,7 +83,9 @@ body.has-sheet .stage { padding-bottom: 240px; }
 .prize { background: var(--gold); border: 2px solid var(--ink); border-radius: 14px; padding: 10px 13px; font-size: 14.5px; font-weight: 600; box-shadow: 0 3px 0 var(--ink); margin: 10px 0 4px; }
 .scorebox { background: var(--ink); color: #fff; border-radius: var(--r); padding: 16px 18px; box-shadow: 0 5px 0 #0B0E22; margin: 14px 0 12px; }
 .scorebox .eyebrow { color: rgba(255,255,255,.55); margin-bottom: 2px; }
-.scorebig { font-family: var(--display); font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.03em; color: var(--gold); }
+.scorebig { font-family: var(--display); font-weight: 800; font-size: 56px; line-height: 1; letter-spacing: -0.03em; color: var(--gold); }
+.scoreline { margin-top: 6px; color: rgba(255,255,255,.8); font-weight: 600; font-size: 15px; }
+.scoreline b { font-size: 18px; }
 .scoremax { font-size: 14px; color: rgba(255,255,255,.5); font-weight: 500; margin-left: 8px; letter-spacing: 0; }
 .prize-won { margin-top: 10px; background: var(--pass); color: var(--ink); border-radius: 10px; padding: 8px 12px; font-weight: 800; font-size: 15px; }
 .prize-miss { margin-top: 10px; background: rgba(255,255,255,.1); border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 14.5px; }
@@ -162,6 +170,8 @@ h2 { font-family: var(--display); font-size: clamp(34px, 9vw, 44px); line-height
 
 /* ---------- report ---------- */
 .report { padding-top: 18px; position: relative; }
+.report .scorebox { margin-top: 6px; }
+.report .report-h { margin-top: 18px; }
 .report-h { font-size: clamp(34px, 9.5vw, 46px); }
 .report-sub { margin: 4px 0 0; color: var(--muted); font-weight: 600; }
 .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }

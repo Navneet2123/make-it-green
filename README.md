@@ -1,14 +1,14 @@
 # 🟢 Make It Green
 
-> Ten questions. One shot each. A timer on every one. Get the build to production.
+> Ten questions. One shot each. A timer on every one. Your score at the end.
 
 ### ▶ [Play it now — navneet2123.github.io/make-it-green](https://navneet2123.github.io/make-it-green/)
 
 No install, no sign-up. Works on a phone.
 
 **Make It Green** is a fast, beautiful, KBC-style quiz that teaches the basics of software test
-automation. Every correct answer promotes your build one stage up a pipeline, from **Commit** to
-**Production**. Get one wrong, or run out of time, and the pipeline goes red.
+automation. Your suite runs ten tests, one per question, from **Commit** to **Production**. Each one
+comes out green or red, and at the end you get a single score.
 
 It is the 5-minute companion to [AUTO: The Automation Mission](https://github.com/Navneet2123/auto-automation-mission),
 a 30–45 minute 3D adventure on the same topic.
@@ -19,7 +19,6 @@ a 30–45 minute 3D adventure on the same topic.
 - 🎲 **Random questions** drawn from a bank of 25, with the options shuffled too
 - 📈 **Rising difficulty:** easy → medium → hard as you climb
 - ✂️ **Three lifelines:** Bisect, Ask the team, Rerun
-- 🔐 **Checkpoints** at stages 3 and 7, so a late mistake does not erase everything
 - ⟲ **Restart any time** from the header, with a confirm so you never lose a run by accident
 - 📱 Phone-first, no sign-up, no backend, no assets to download
 
@@ -59,37 +58,36 @@ Open **http://localhost:5174** and press **▶ Start the pipeline**.
 
 1. Read the question. The tier badge tells you how hard it is, the ring tells you how long you have.
 2. Tap an answer. It turns gold. Nothing is final yet.
-3. Press **🔒 Lock it in**. The screen holds for a beat, then the correct answer goes green and yours goes red if it was not.
-4. Right answer → the verdict shows the points you earned and you go straight to the next question. Wrong answer, or the clock hits zero → the run ends.
+3. Press **🔒 Lock it in**. The screen holds for a beat, then the correct answer goes green and yours goes red if it was not, with one line explaining why.
+4. Straight on to the next question. All ten are asked whatever you answer.
 
-There is no scoreboard between questions. The full breakdown appears once, at the end.
+No score is shown while you play: not a running total, not a progress bar, not points on the verdict.
+The score appears once, at the end.
 
 Keyboard: **A**–**D** to pick, **Enter** to lock and to continue.
 
-Your running score sits beside the stage name, and your best score is remembered on this device.
+Your best score is remembered on this device, and can be cleared from the start screen.
 
 ### The pipeline
 
-| Stage | Tier | Time | Points |
+| Question | Tier | Time | Points |
 | --- | --- | --- | --- |
 | 1 Commit | easy | 30s | 50 |
 | 2 Lint | easy | 30s | 100 |
-| 3 Build ⚑ | easy | 30s | 150 |
+| 3 Build | easy | 30s | 150 |
 | 4 Unit tests | easy | 25s | 200 |
 | 5 Integration | medium | 25s | 300 |
 | 6 API tests | medium | 25s | 400 |
-| 7 End-to-end ⚑ | medium | 22s | 500 |
+| 7 End-to-end | medium | 22s | 500 |
 | 8 Staging | hard | 20s | 700 |
 | 9 Smoke test | hard | 20s | 900 |
 | 10 Production | hard | 20s | 1200 |
-
-⚑ marks a safe point. Clear it and that score is yours even if a later question ends the run.
 
 ### Scoring and the chocolate
 
 - Each correct answer earns the stage's points, plus a **speed bonus** of up to 50% for answering fast.
 - **Score 1000 or more and you have earned a chocolate.** That is roughly the easy tier plus one medium question.
-- A slim bar above every question shows your score and how far the chocolate is, and crossing 1000 takes over the screen so the whole room knows. The final report says plainly whether it was earned. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
+- The final report says plainly whether it was earned: **"🍫 Chocolate earned — show this screen to claim it"**, or how many points short you were. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
 - A perfect, fast run scores **6750**.
 
 To make the prize easier or harder, change `PASS_SCORE` in [`src/lib/content.ts`](src/lib/content.ts). Point values per stage and the `SPEED_BONUS` share live there too.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CONCEPTS, LADDER, PASS_SCORE } from './lib/content';
-import { checkpointFor, clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
+import { clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
 import { isMuted, setMuted, sfx } from './lib/audio';
 import { Timer } from './components/Timer';
 import { LadderList, LadderRail } from './components/Ladder';
@@ -44,7 +44,6 @@ export default function App() {
   // A dialog freezes the clock, and never lingers over a run that ended underneath it.
   useEffect(() => { dispatch({ type: 'pause', on: confirmRestart }); }, [confirmRestart]);
   useEffect(() => { if (s.phase !== 'question') setConfirmRestart(false); }, [s.phase]);
-  useEffect(() => { if (s.phase === 'reveal' && s.lastCorrect && LADDER[s.stage].checkpoint) sfx.stageUp(); }, [s.phase]);
 
   // Sounds on reveal.
   useEffect(() => {
@@ -73,7 +72,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        {inGame ? <LadderRail stage={s.stage} cleared={s.reached} /> : <div className="brand">make it <b>green</b></div>}
+        {inGame ? <LadderRail answers={s.answers} stage={s.stage} /> : <div className="brand">make it <b>green</b></div>}
         <div className="top-right">
           {inGame && <Timer left={s.timeLeft} total={stage.seconds} paused={s.phase !== 'question'} />}
           {s.phase !== 'intro' && <button className="icon restart" onClick={() => setConfirmRestart(true)} aria-label="Restart from the beginning">⟲<span>New player</span></button>}
@@ -88,11 +87,10 @@ export default function App() {
           {(s.phase === 'question' || s.phase === 'locking' || s.phase === 'reveal') && s.drawn && (
             <motion.section {...enter}>
               <div className="qhead">
-                <span className="qstage mono"><i className={`tier ${stage.tier}`} />stage {stage.n} · {stage.name}</span>
+                <span className="qstage mono"><i className={`tier ${stage.tier}`} />question {stage.n} of {LADDER.length} · {stage.name}</span>
                 <span className={`tierpill ${stage.tier}`}>{stage.tier}</span>
               </div>
-              <p className="qsub">{stage.sub} · worth {stage.points} points</p>
-              <ChocolateBar score={s.score} slim />
+              <p className="qsub">{stage.sub}</p>
               <div className="play-cols">
                 <div className="play-main">
                   <QuestionCard drawn={s.drawn} selected={s.selected} hidden={s.hidden} poll={s.poll}
@@ -110,7 +108,7 @@ export default function App() {
                     </>
                   )}
                 </div>
-                <aside className="play-side"><LadderList cleared={s.reached} current={s.stage} compact /></aside>
+                <aside className="play-side"><LadderList answers={s.answers} /></aside>
               </div>
             </motion.section>
           )}
@@ -120,18 +118,6 @@ export default function App() {
       </main>
 
       <AnimatePresence>
-        {s.justWonPrize && (
-          <motion.div className="prize-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => dispatch({ type: 'prizeSeen' })}>
-            <Confetti />
-            <motion.div className="prize-burst" initial={{ scale: 0.5, rotate: -6 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 18 }}>
-              <div className="prize-choc">🍫</div>
-              <h2>That's a chocolate.</h2>
-              <p>You passed {PASS_SCORE} points. Whatever happens next, it is yours.</p>
-              <button className="btn primary big" onClick={() => dispatch({ type: 'prizeSeen' })}>Keep climbing</button>
-            </motion.div>
-          </motion.div>
-        )}
         {confirmRestart && (
           <motion.div className="modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmRestart(false)}>
             <motion.div className="modal-card" initial={{ scale: 0.9, y: 14 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
@@ -153,16 +139,10 @@ export default function App() {
                 <motion.div className="verdict" initial={{ scale: 0.7 }} animate={s.lastCorrect ? { scale: [0.7, 1.12, 1] } : { x: [0, -8, 8, -6, 6, 0], scale: 1 }} transition={{ duration: 0.45 }}>
                   {s.lastCorrect ? '✓ Correct' : s.timedOut && s.selected === null ? "⏱ Time's up" : '✗ Wrong'}
                 </motion.div>
-                {s.lastGain && (
-                  <motion.div className="verdict-pts" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 20, delay: 0.15 }}>
-                    +{s.lastGain.base}{s.lastGain.bonus > 0 && <i>⚡ +{s.lastGain.bonus}</i>}
-                  </motion.div>
-                )}
               </div>
-              {s.lastCorrect && LADDER[s.stage].checkpoint && <div className="cp-note">⚑ Safe point — this score is yours even if the next question ends the run</div>}
               <p className="explain">{s.drawn.question.explain}</p>
               <button className="btn big on-pass" onClick={() => dispatch({ type: 'next' })}>
-                {s.lastCorrect ? (s.stage + 1 >= LADDER.length ? 'Ship it 🚀' : `Promote to ${LADDER[s.stage + 1].name}`) : 'See the damage'} <span className="mono kbd">↵</span>
+                {s.stage + 1 >= LADDER.length ? 'See my score 🚀' : `Next question`} <span className="mono kbd">↵</span>
               </button>
             </div>
           </motion.div>
@@ -178,21 +158,21 @@ function Intro({ onStart, onClearBest }: { onStart: () => void; onClearBest: () 
     <div className="intro">
       <div className="eyebrow mono">10 questions · one shot each · 5 minutes</div>
       <h1>Make it <span className="green">green</span>.</h1>
-      <p className="lede">Answer to promote the build. Ten questions, harder every stage, a timer on every one. Get one wrong and the pipeline goes red.</p>
+      <p className="lede">Your suite runs ten tests. Each one gets harder, each one is on the clock, and you get a single answer at each. Your score comes at the end.</p>
       <div className="intro-scale">
         <div className="scale-row"><b>50</b><span className="scale-bar"><i style={{ left: `${(PASS_SCORE / 4500) * 100}%` }} /></span><b>1200</b></div>
-        <div className="scale-legend"><span>stage 1</span><span className="choc-mark">🍫 {PASS_SCORE}</span><span>stage 10</span></div>
+        <div className="scale-legend"><span>question 1</span><span className="choc-mark">🍫 {PASS_SCORE}</span><span>question 10</span></div>
       </div>
       <div className="intro-rules">
-        <span>⏱ 30s → 20s</span><span>🔒 one answer only</span><span>🎲 random questions</span><span>✂ 3 lifelines</span>
+        <span>⏱ 30s → 20s</span><span>🔒 one answer only</span><span>🎲 random questions</span><span>✂ 3 lifelines</span><span>📊 score at the end</span>
       </div>
       <div className="prize">🍫 Score <b>{PASS_SCORE}</b> or more and you have earned a chocolate. Answer fast for bonus points.</div>
       {best > 0 && (
-        <p className="fine left">Best on this device: stage {best} · {LADDER[best - 1].name} · ★ {loadBestScore()}
+        <p className="fine left">Best on this device: {best} of {LADDER.length} green · ★ {loadBestScore()}
           {' '}<button className="linkbtn" onClick={onClearBest}>clear</button>
         </p>
       )}
-      <button className="btn primary big" onClick={onStart}>▶ Start the pipeline</button>
+      <button className="btn primary big" onClick={onStart}>▶ Start the run</button>
       <p className="fine">No sign-up. Works on your phone. Sound on is nicer.</p>
     </div>
   );
@@ -214,40 +194,33 @@ function ChocolateBar({ score, big = false, slim = false }: { score: number; big
 }
 
 function Report({ s, onReplay }: { s: ReturnType<typeof reduce>; onReplay: () => void }) {
-  const cleared = s.reached;
-  const rank = rankFor(cleared);
-  const cp = checkpointFor(cleared);
+  const right = s.reached;
+  const rank = rankFor(right);
   const time = fmtTime((s.finishedAt ?? Date.now()) - (s.startedAt ?? Date.now()));
-  const right = s.answers.filter((a) => a.correct).length;
   const won = wonChocolate(s.score);
+  const perfect = right === LADDER.length;
   const [copied, setCopied] = useState(false);
   const share = useMemo(() =>
-    `🟢 Make It Green — ${s.won ? 'shipped to Production!' : `build failed at ${LADDER[Math.min(cleared, LADDER.length - 1)].name}`}\n` +
-    `★ ${s.score} points · ${cleared}/10 stages · ${right} correct · ${time}\n` +
+    `🟢 Make It Green — ${right}/${LADDER.length} green · ★ ${s.score} points · ${time}\n` +
     `${won ? '🍫 Chocolate earned!' : `🍫 ${PASS_SCORE - s.score} points short of a chocolate`} · ${rank.name}\n` +
-    LADDER.map((st) => `${st.n <= cleared ? '🟩' : '⬜️'}`).join('') +
-    `\nPlay it (5 min): ${location.origin}${location.pathname}`, [cleared, right, time, rank, s.won]);
+    s.answers.map((a) => (a.correct ? '🟩' : '🟥')).join('') +
+    `\nPlay it (5 min): ${location.origin}${location.pathname}`, [right, time, rank, s.score, won, s.answers]);
   const copy = async () => { try { await navigator.clipboard.writeText(share); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} };
   return (
     <div className="report">
-      {s.won && <Confetti />}
-      <div className="eyebrow mono">{s.won ? 'deployed' : 'build report'}</div>
-      <h2 className="report-h">{s.won ? <>Shipped to <span className="green">production</span>.</> : <><span className="coral">Red</span> at {LADDER[Math.min(cleared, LADDER.length - 1)].name}.</>}</h2>
-      <p className="report-sub">{s.won ? 'Ten questions, ten green stages. Nobody does that by accident.' : `You cleared ${cleared} of 10 stages${cp ? ` and banked the ${LADDER[cp - 1].name} checkpoint` : ''}. Different questions next run.`}</p>
+      {won && <Confetti />}
+      <div className="eyebrow mono">final score</div>
       <div className={`scorebox ${won ? 'won' : ''}`}>
-        <div className="eyebrow mono">final score</div>
         <div className="scorebig">★ {s.score}</div>
+        <div className="scoreline"><b className="green">{right}</b> of {LADDER.length} tests green · {time}</div>
         {won
           ? <div className="prize-won">🍫 Chocolate earned — show this screen to claim it</div>
           : <div className="prize-miss">🍫 {PASS_SCORE - s.score} points short. One more run?</div>}
       </div>
+      <h2 className="report-h">{perfect ? <>All <span className="green">green</span>.</> : right >= 7 ? <>Mostly <span className="green">green</span>.</> : right >= 4 ? <>Half the suite is <span className="green">green</span>.</> : <>A <span className="coral">red</span> suite. Now you know why.</>}</h2>
+      <p className="report-sub">{perfect ? 'Ten out of ten on the first run. Nobody does that by accident.' : 'Every red one came with the reason. A new run draws different questions.'}</p>
       {!won && <ChocolateBar score={s.score} big />}
-      <div className="summary">
-        <div className="stat"><b className="green">{cleared}/10</b><span>stages</span></div>
-        <div className="stat"><b>{right}</b><span>correct</span></div>
-        <div className="stat"><b>{time}</b><span>time</span></div>
-      </div>
-      <LadderList cleared={cleared} compact />
+      <LadderList answers={s.answers} />
       <div className="rank"><div className="eyebrow mono">your rank</div><b>{rank.name}</b><p>{rank.line}</p></div>
       <div className="learned">
         <div className="eyebrow mono">ideas you got right</div>

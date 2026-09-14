@@ -21,11 +21,10 @@ export interface Stage {
   sub: string;      // what that stage means, in plain English
   tier: Tier;
   seconds: number;
-  points: number;   // base points for clearing this stage
-  checkpoint?: boolean;
+  points: number;   // base points for getting this one right
 }
 
-/** Score needed to win a chocolate. Roughly: clear the easy tier and one medium question. */
+/** Score needed to win a chocolate. Roughly: the easy questions plus one medium one. */
 export const PASS_SCORE = 1000;
 /** Answer fast and you keep up to this share of the stage points as a speed bonus. */
 export const SPEED_BONUS = 0.5;
@@ -34,11 +33,11 @@ export const SPEED_BONUS = 0.5;
 export const LADDER: Stage[] = [
   { n: 1, name: 'Commit', sub: 'your work goes in', tier: 'easy', seconds: 30, points: 50 },
   { n: 2, name: 'Lint', sub: 'the tidiness check', tier: 'easy', seconds: 30, points: 100 },
-  { n: 3, name: 'Build', sub: 'it all fits together', tier: 'easy', seconds: 30, points: 150, checkpoint: true },
+  { n: 3, name: 'Build', sub: 'it all fits together', tier: 'easy', seconds: 30, points: 150 },
   { n: 4, name: 'Unit tests', sub: 'each small piece works', tier: 'easy', seconds: 25, points: 200 },
   { n: 5, name: 'Integration', sub: 'the pieces work together', tier: 'medium', seconds: 25, points: 300 },
   { n: 6, name: 'API tests', sub: 'the server answers correctly', tier: 'medium', seconds: 25, points: 400 },
-  { n: 7, name: 'End-to-end', sub: 'a whole customer journey', tier: 'medium', seconds: 22, points: 500, checkpoint: true },
+  { n: 7, name: 'End-to-end', sub: 'a whole customer journey', tier: 'medium', seconds: 22, points: 500 },
   { n: 8, name: 'Staging', sub: 'a rehearsal copy of the site', tier: 'hard', seconds: 20, points: 700 },
   { n: 9, name: 'Smoke test', sub: 'the basics still work', tier: 'hard', seconds: 20, points: 900 },
   { n: 10, name: 'Production', sub: 'live, in front of customers', tier: 'hard', seconds: 20, points: 1200 },
@@ -154,12 +153,13 @@ export const BANK: Question[] = [
     answer: 0, explain: 'Read the error, find the step, fix it, rerun. Repeat until the run is green.' },
 ];
 
+/** Ranks by how many of the ten came out green. */
 export const RANKS = [
-  { min: 0, name: 'Build Failed', line: 'Everyone starts here. The next run picks different questions.' },
-  { min: 3, name: 'Junior Tester', line: 'You got the build compiling. You know what automation is for.' },
-  { min: 5, name: 'QA Engineer', line: 'Scripts, locators, assertions. You could explain these to a friend.' },
-  { min: 8, name: 'Automation Engineer', line: 'You made it to staging. Locators, waits and flaky tests hold no fear.' },
-  { min: 10, name: 'Release Manager', line: 'Shipped to production with every test green. Sam would like to hire you.' },
+  { min: 0, name: 'Curious Human', line: 'A red suite is where everyone starts. The next run draws different questions.' },
+  { min: 3, name: 'Junior Tester', line: 'You know what automation is for, and who should still do the thinking.' },
+  { min: 5, name: 'QA Engineer', line: 'Scripts, locators and assertions. You could explain these to a friend.' },
+  { min: 7, name: 'Automation Engineer', line: 'Locators, waits and flaky tests hold no fear for you.' },
+  { min: 10, name: 'Green Suite Legend', line: 'Ten out of ten green on the first run. Sam would like to hire you.' },
 ];
 
 export const CONCEPTS = ['Automation', 'Manual vs automated', 'Test case', 'Script', 'Locator', 'XPath', 'Assertion', 'Pass / fail', 'Debugging'];

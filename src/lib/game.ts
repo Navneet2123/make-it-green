@@ -16,9 +16,8 @@ export interface State {
   poll: number[] | null;    // Ask the team percentages
   lastCorrect: boolean | null;
   timedOut: boolean;
-  reached: number;          // stages cleared
+  reached: number;          // questions answered correctly
   score: number;            // points earned so far
-  banked: number;           // score at the last checkpoint you cleared
   lastGain: { base: number; bonus: number } | null;
   paused: boolean;          // a dialog is open, so the clock stops
   justWonPrize: boolean;    // this answer is the one that crossed the chocolate line
@@ -31,7 +30,7 @@ export interface State {
 export const fresh = (): State => ({
   phase: 'intro', stage: 0, drawn: null, used: new Set(), selected: null, timeLeft: LADDER[0].seconds,
   lifelines: { bisect: true, ask: true, rerun: true }, hidden: [], poll: null,
-  lastCorrect: null, timedOut: false, reached: 0, score: 0, banked: 0, lastGain: null, paused: false, justWonPrize: false,
+  lastCorrect: null, timedOut: false, reached: 0, score: 0, lastGain: null, paused: false, justWonPrize: false,
   answers: [], startedAt: null, finishedAt: null, won: false,
 });
 
@@ -39,13 +38,6 @@ export type Action =
   | { type: 'start' } | { type: 'select'; i: number } | { type: 'lock' } | { type: 'reveal' } | { type: 'tick'; dt: number }
   | { type: 'next' } | { type: 'bisect' } | { type: 'ask' } | { type: 'rerun' } | { type: 'reset' }
   | { type: 'pause'; on: boolean } | { type: 'prizeSeen' };
-
-/** Where you fall back to when a run ends: the last checkpoint you cleared. */
-export function checkpointFor(cleared: number) {
-  let cp = 0;
-  for (const s of LADDER) if (s.checkpoint && s.n <= cleared) cp = s.n;
-  return cp;
-}
 
 export function reduce(s: State, a: Action): State {
   switch (a.type) {
@@ -72,18 +64,18 @@ export function reduce(s: State, a: Action): State {
       if (s.phase !== 'locking') return s;
       return settle(s, s.selected, false);
     case 'next': {
-      if (s.phase === 'reveal' && s.lastCorrect) {
-        const nextStage = s.stage + 1;
-        if (nextStage >= LADDER.length) { rememberSeen([...s.used]); return { ...s, phase: 'over', won: true, finishedAt: Date.now() }; }
-        const st = LADDER[nextStage];
-        const drawn = draw(st.tier, s.used, st.n);
-        return {
-          ...s, phase: 'question', stage: nextStage, drawn, used: new Set([...s.used, drawn.question.id]),
-          selected: null, hidden: [], poll: null, timeLeft: st.seconds, timedOut: false,
-        };
+      if (s.phase !== 'reveal') return s;
+      const nextStage = s.stage + 1;
+      if (nextStage >= LADDER.length) {
+        rememberSeen([...s.used]);
+        return { ...s, phase: 'over', won: s.reached === LADDER.length, finishedAt: Date.now() };
       }
-      rememberSeen([...s.used]);
-      return { ...s, phase: 'over', finishedAt: Date.now() };
+      const st = LADDER[nextStage];
+      const drawn = draw(st.tier, s.used, st.n);
+      return {
+        ...s, phase: 'question', stage: nextStage, drawn, used: new Set([...s.used, drawn.question.id]),
+        selected: null, hidden: [], poll: null, timeLeft: st.seconds, timedOut: false,
+      };
     }
     case 'bisect': {
       if (s.phase !== 'question' || !s.lifelines.bisect || !s.drawn) return s;
@@ -120,9 +112,9 @@ function settle(s: State, choice: number | null, timedOut: boolean): State {
   const score = s.score + base + bonus;
   return {
     ...s, phase: 'reveal', selected: choice, lastCorrect: correct, timedOut,
-    justWonPrize: s.score < PASS_SCORE && score >= PASS_SCORE,
-    reached: correct ? s.stage + 1 : s.reached,
-    score, banked: correct && st.checkpoint ? score : s.banked,
+    justWonPrize: false,   // the prize is revealed with the final score, not mid-run
+    reached: correct ? s.reached + 1 : s.reached,
+    score,
     lastGain: correct ? { base, bonus } : null,
     answers: [...s.answers, { concept: s.drawn!.question.concept, correct }],
   };

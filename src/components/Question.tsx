@@ -13,9 +13,9 @@ function RichText({ text }: { text: string }) {
       : <span key={i}>{part}</span>)}</>;
 }
 
-export function QuestionCard({ drawn, selected, hidden, poll, revealed, locking, correctIndex, onSelect }: {
+export function QuestionCard({ drawn, selected, hidden, poll, locking, onSelect }: {
   drawn: Drawn; selected: number | null; hidden: number[]; poll: number[] | null;
-  revealed: boolean; locking?: boolean; correctIndex: number; onSelect: (i: number) => void;
+  locking?: boolean; onSelect: (i: number) => void;
 }) {
   const { question, order } = drawn;
   return (
@@ -26,23 +26,18 @@ export function QuestionCard({ drawn, selected, hidden, poll, revealed, locking,
       <div className="opts">
         {order.map((origin, i) => {
           const gone = hidden.includes(i);
-          const isCorrect = revealed && i === correctIndex;
-          const isWrong = revealed && selected === i && i !== correctIndex;
           const held = locking && selected === i;
           return (
-            <motion.button key={i} disabled={gone || revealed || locking}
-              whileTap={gone || revealed ? undefined : { scale: 0.98 }}
-              style={locking && selected !== i ? { opacity: 0.35 } : undefined}
-              animate={isCorrect ? { scale: [1, 1.04, 1] } : isWrong ? { x: [0, -7, 7, -5, 5, 0] } : {}}
+            <motion.button key={i} disabled={gone || locking}
+              whileTap={gone ? undefined : { scale: 0.98 }}
+              style={locking && selected !== i ? { opacity: 0.3 } : undefined}
               transition={{ duration: 0.42 }}
-              className={['opt', selected === i ? 'sel' : '', gone ? 'gone' : '', isCorrect ? 'right' : '', isWrong ? 'wrong' : '', held ? 'held' : ''].join(' ')}
-              onClick={() => { if (!gone && !revealed) { sfx.select(); onSelect(i); } }}>
+              className={['opt', selected === i ? 'sel' : '', gone ? 'gone' : '', held ? 'held' : ''].join(' ')}
+              onClick={() => { if (!gone && !locking) { sfx.select(); onSelect(i); } }}>
               <span className="opt-l">{LETTERS[i]}</span>
               <span className="opt-t">{gone ? '' : <RichText text={question.options[origin]} />}</span>
               {poll && !gone && <span className="opt-poll" style={{ width: `${poll[i]}%` }} />}
               {poll && !gone && <span className="opt-pct">{poll[i]}%</span>}
-              {isCorrect && <span className="opt-mark">✓</span>}
-              {isWrong && <span className="opt-mark">✗</span>}
             </motion.button>
           );
         })}

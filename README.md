@@ -58,11 +58,14 @@ Open **http://localhost:5174** and press **▶ Start the pipeline**.
 
 1. Read the question. The tier badge tells you how hard it is, the ring tells you how long you have.
 2. Tap an answer. It turns gold. Nothing is final yet.
-3. Press **🔒 Lock it in**. The screen holds for a beat, then the correct answer goes green and yours goes red if it was not, with one line explaining why.
-4. Straight on to the next question. All ten are asked whatever you answer.
+3. Press **🔒 Lock it in** and go straight on to the next question. All ten are asked whatever you answer.
 
-No score is shown while you play: not a running total, not a progress bar, not points on the verdict.
-The score appears once, at the end.
+Nothing is revealed while you play. Not your score, not whether an answer was right. The strip at the
+top fills in as you go, but it stays neutral.
+
+**Everything arrives in the report at the end:** your score, how many came out green, whether you
+earned a chocolate, and then all ten questions with the correct answer, what you picked if you got it
+wrong, and one line explaining why.
 
 Keyboard: **A**–**D** to pick, **Enter** to lock and to continue.
 
@@ -87,7 +90,8 @@ Your best score is remembered on this device, and can be cleared from the start 
 
 - Each correct answer earns the stage's points, plus a **speed bonus** of up to 50% for answering fast.
 - **Score 1000 or more and you have earned a chocolate.** That is roughly the easy tier plus one medium question.
-- The final report says plainly whether it was earned: **"🍫 Chocolate earned — show this screen to claim it"**, or how many points short you were. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
+- The final report says plainly whether it was earned: **"🍫 Chocolate earned — show this screen to claim it"**, or how many points short you were.
+- Nothing about the score is visible until then. **Copy result** puts the score and verdict on the clipboard so a player can show or send their claim.
 - A perfect, fast run scores **6750**.
 
 To make the prize easier or harder, change `PASS_SCORE` in [`src/lib/content.ts`](src/lib/content.ts). Point values per stage and the `SPEED_BONUS` share live there too.
@@ -113,8 +117,8 @@ Nine ideas, all through questions you answer rather than text you read:
 **Automation** · **Manual vs automated testing** · **Test case** · **Script** · **Locator** ·
 **XPath** · **Assertion** · **Pass / fail** · **Debugging**
 
-Every question, right or wrong, shows a one-line explanation before you move on. The report marks
-which ideas you actually got right.
+The report reviews all ten questions with a one-line explanation each, and marks which ideas you got
+right.
 
 ---
 
@@ -146,7 +150,7 @@ src/
 ├── styles.css             Design tokens and all styling
 ├── components/
 │   ├── Timer.tsx          SVG countdown ring with the seconds animating inside
-│   ├── Ladder.tsx         The pipeline: compact rail while playing, full list elsewhere
+│   ├── Ladder.tsx         Neutral progress rail while playing, full answer review on the report
 │   └── Question.tsx       MCQ card, options, poll bars, lifeline bar
 └── lib/
     ├── content.ts         Question bank, ladder, points, pass mark, random draw (edit me)

@@ -40,9 +40,29 @@ body.has-sheet .stage { padding-bottom: 240px; }
 /* ---------- ladder ---------- */
 .rail { display: flex; gap: 4px; align-items: center; flex: 1; min-width: 0; }
 .rung { height: 10px; flex: 1 1 auto; min-width: 5px; max-width: 26px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); transition: background .3s; }
-.rung.done { background: var(--pass); }
-.rung.miss { background: var(--fail); }
+.rung.answered { background: var(--ink); }
 .rung.now { background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+
+/* ---------- final report: every question reviewed ---------- */
+.review-head { margin-top: 18px; }
+.review { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; counter-reset: r; }
+.review li { background: var(--card); border: 2px solid var(--ink); border-radius: 14px; padding: 12px 14px; box-shadow: 0 3px 0 var(--ink); }
+.review li.ok { border-color: var(--pass); }
+.review li.bad { border-color: var(--fail); }
+.rv-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rv-n { width: 22px; height: 22px; border-radius: 7px; background: var(--tint); display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+.rv-stage { font-size: 11.5px; color: var(--muted); text-transform: lowercase; }
+.rv-mark { margin-left: auto; font-family: var(--display); font-weight: 800; font-size: 14px; }
+.review li.ok .rv-mark { color: #0E8A57; }
+.review li.bad .rv-mark { color: var(--fail); }
+.review li.ok .rv-n { background: var(--pass); }
+.review li.bad .rv-n { background: var(--fail); color: #fff; }
+.rv-q { margin: 0 0 8px; font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+.rv-yours { margin: 0 0 4px; font-size: 14px; color: var(--fail); }
+.rv-ans { margin: 0 0 6px; font-size: 14px; }
+.rv-ans span { color: var(--muted); font-weight: 600; }
+.rv-yours b, .rv-ans b { font-weight: 800; }
+.rv-why { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.4; }
 .rung.cp { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
 @keyframes pulse { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.7); } }
 .ladder { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 5px; }

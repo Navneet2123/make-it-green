@@ -4,7 +4,7 @@ import { CONCEPTS, LADDER, PASS_SCORE } from './lib/content';
 import { clearBest, fmtTime, fresh, loadBest, loadBestScore, rankFor, reduce, saveBest, wonChocolate } from './lib/game';
 import { isMuted, setMuted, sfx } from './lib/audio';
 import { Timer } from './components/Timer';
-import { LadderList, LadderRail } from './components/Ladder';
+import { AnswerReview, LadderRail } from './components/Ladder';
 import { LifelineBar, QuestionCard } from './components/Question';
 
 const enter = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.26, ease: [0.2, 0.8, 0.2, 1] } };
@@ -17,7 +17,7 @@ export default function App() {
   const stage = LADDER[s.stage];
   const playing = s.phase === 'question';
   const lastTick = useRef(0);
-  useEffect(() => { document.body.classList.toggle('has-sheet', s.phase === 'reveal'); }, [s.phase]);
+
 
   // Countdown. Ticks 10x a second so the ring moves smoothly.
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function App() {
   useEffect(() => {
     if (s.phase !== 'locking') return;
     sfx.suspense();
-    const id = setTimeout(() => dispatch({ type: 'reveal' }), 1100);
+    const id = setTimeout(() => dispatch({ type: 'advance' }), 900);
     return () => clearTimeout(id);
   }, [s.phase]);
 
@@ -45,10 +45,8 @@ export default function App() {
   useEffect(() => { dispatch({ type: 'pause', on: confirmRestart }); }, [confirmRestart]);
   useEffect(() => { if (s.phase !== 'question') setConfirmRestart(false); }, [s.phase]);
 
-  // Sounds on reveal.
   useEffect(() => {
-    if (s.phase === 'reveal') { s.lastCorrect ? sfx.pass() : sfx.fail(); }
-    if (s.phase === 'over') { s.won ? sfx.report() : sfx.gameOver(); saveBest(s.reached, s.score); }
+    if (s.phase === 'over') { sfx.report(); saveBest(s.reached, s.score); }
   }, [s.phase]);
 
   // Keyboard: A–D to pick, Enter to lock or continue.
@@ -60,7 +58,7 @@ export default function App() {
         const i = ['a', 'b', 'c', 'd'].indexOf(k);
         if (i >= 0) { sfx.select(); dispatch({ type: 'select', i }); }
         if (k === 'enter' && s.selected !== null) { sfx.lock(); dispatch({ type: 'lock' }); }
-      } else if (k === 'enter' && s.phase === 'reveal') dispatch({ type: 'next' });
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -84,7 +82,7 @@ export default function App() {
         <div className="stage-inner" key={`${s.phase}-${s.stage}-${s.drawn?.question.id ?? ''}`}>
           {s.phase === 'intro' && <motion.section {...enter}><Intro onStart={() => { sfx.stageUp(); dispatch({ type: 'start' }); }} onClearBest={() => { clearBest(); setBestNonce((n) => n + 1); }} /></motion.section>}
 
-          {(s.phase === 'question' || s.phase === 'locking' || s.phase === 'reveal') && s.drawn && (
+          {(s.phase === 'question' || s.phase === 'locking') && s.drawn && (
             <motion.section {...enter}>
               <div className="qhead">
                 <span className="qstage mono"><i className={`tier ${stage.tier}`} />question {stage.n} of {LADDER.length} · {stage.name}</span>
@@ -93,9 +91,8 @@ export default function App() {
               <p className="qsub">{stage.sub}</p>
               <div className="play-main">
                   <QuestionCard drawn={s.drawn} selected={s.selected} hidden={s.hidden} poll={s.poll}
-                    revealed={s.phase === 'reveal'} locking={s.phase === 'locking'} correctIndex={s.drawn.answer}
-                    onSelect={(i) => dispatch({ type: 'select', i })} />
-                  {s.phase === 'locking' && <p className="locking-note">🔒 Locked in. Let's see…</p>}
+                    locking={s.phase === 'locking'} onSelect={(i) => dispatch({ type: 'select', i })} />
+                  {s.phase === 'locking' && <p className="locking-note">{s.timedOut ? "⏱ Time's up" : '🔒 Locked in'}</p>}
                 {s.phase === 'question' && (
                   <>
                     <LifelineBar lifelines={s.lifelines} disabled={false}
@@ -125,23 +122,6 @@ export default function App() {
                 <button className="btn big" autoFocus onClick={() => setConfirmRestart(false)}>Keep playing</button>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-        {s.phase === 'reveal' && s.drawn && (
-          <motion.div key={`rev-${s.stage}`} className={`sheet ${s.lastCorrect ? 'sheet-pass' : 'sheet-fail'}`}
-            initial={{ y: 220, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 180, opacity: 0, transition: { duration: 0.16 } }}
-            transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
-            <div className="sheet-inner">
-              <div className="verdict-row">
-                <motion.div className="verdict" initial={{ scale: 0.7 }} animate={s.lastCorrect ? { scale: [0.7, 1.12, 1] } : { x: [0, -8, 8, -6, 6, 0], scale: 1 }} transition={{ duration: 0.45 }}>
-                  {s.lastCorrect ? '✓ Correct' : s.timedOut && s.selected === null ? "⏱ Time's up" : '✗ Wrong'}
-                </motion.div>
-              </div>
-              <p className="explain">{s.drawn.question.explain}</p>
-              <button className="btn big on-pass" onClick={() => dispatch({ type: 'next' })}>
-                {s.stage + 1 >= LADDER.length ? 'See my score 🚀' : `Next question`} <span className="mono kbd">↵</span>
-              </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -215,9 +195,12 @@ function Report({ s, onReplay }: { s: ReturnType<typeof reduce>; onReplay: () =>
           : <div className="prize-miss">🍫 {PASS_SCORE - s.score} points short. One more run?</div>}
       </div>
       <h2 className="report-h">{perfect ? <>All <span className="green">green</span>.</> : right >= 7 ? <>Mostly <span className="green">green</span>.</> : right >= 4 ? <>Half the suite is <span className="green">green</span>.</> : <>A <span className="coral">red</span> suite. Now you know why.</>}</h2>
-      <p className="report-sub">{perfect ? 'Ten out of ten on the first run. Nobody does that by accident.' : 'Every red one came with the reason. A new run draws different questions.'}</p>
+      <p className="report-sub">{perfect ? 'Ten out of ten on the first run. Nobody does that by accident.' : 'Here is every question with the answer and the reason. A new run draws different ones.'}</p>
       {!won && <ChocolateBar score={s.score} big />}
-      <LadderList answers={s.answers} />
+      <div className="review-head">
+        <div className="eyebrow mono">every question, and why</div>
+      </div>
+      <AnswerReview answers={s.answers} />
       <div className="rank"><div className="eyebrow mono">your rank</div><b>{rank.name}</b><p>{rank.line}</p></div>
       <div className="learned">
         <div className="eyebrow mono">ideas you got right</div>

@@ -248,12 +248,35 @@ Consequences cleaned up: safe points had nothing left to protect, so checkpoints
 score were removed. Ranks are now keyed to how many came out green rather than how far you climbed.
 The share text became a green and red square per question.
 
-## 10. Iteration log
+## 10. Team review → v3.1 (silence until the report)
+
+> "Also remove telling if you have told the right or wrong question. We will give the report after
+> everything is done."
+
+The last piece of mid-run feedback went. There is no verdict panel, no explanation between
+questions, and the options no longer turn green or red when you lock one in. The header strip fills
+in as you answer but stays a neutral colour, so it shows how far along you are without hinting at
+how you are doing.
+
+A run is now: question, pick, lock in, a brief "🔒 Locked in", next question. Ten times. Then the
+report.
+
+Because the explanations were the only teaching in the game and they used to appear between
+questions, they had to move somewhere. The report now carries a full review: each of the ten
+questions, what you picked when you got it wrong, the correct answer, and the one-line reason. That
+also means a player reads the ideas in one sitting at the end rather than in ten interruptions,
+which suits a five-minute game better than it first appears.
+
+This required storing more per answer than a boolean, so the state keeps a record per question with
+the wording, both answers, the explanation and the points earned.
+
+## 11. Iteration log
 
 - v1.0 — initial release: 5 levels, 14 tests, report, share, replay.
 - v1.1 — human-review pass (see §4): retries, wording, phone header, order reveal, report tone, share link.
 - v2.0 — team review (see §5): KBC format. MCQ only, animated timer, random questions, difficulty tiers, one attempt, pipeline ladder, lifelines.
 - v2.1 — follow-up review (see §6): points per stage with speed bonus, chocolate pass mark at 1000, restart button with confirm.
+- v3.1 — team review (see §10): no right or wrong shown during play; the report carries a full per-question review.
 - v3.0 — team review (see §9): no elimination, all ten questions always asked, score revealed only at the end.
 - v2.3 — flow review (see §8): no screen between questions; points ride on the verdict; the score summary appears only at the end.
 - v2.2 — second independent playtest (see §7): suspense beat on lock-in, full-screen chocolate moment, always-visible target, paused dialog, frozen timer, sticky continue, plain-English stages and lifelines, no repeat questions.

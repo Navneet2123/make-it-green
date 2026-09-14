@@ -162,8 +162,9 @@ Stack: Vite, React 18, TypeScript, framer-motion. No backend.
 
 - Palette: periwinkle mist background, ink navy, pass green, fail coral, quiz gold.
 - Type: Bricolage Grotesque for headlines, Instrument Sans for body, JetBrains Mono for code.
-- The question card is dark with a gold glow for the game-show drama; everything around it stays
-  light and calm. Chunky controls with hard shadows that press down. Reduced motion is respected.
+- One centred column at every screen width, phone and desktop alike, so nothing competes with the
+  question. The question card is dark with a gold glow for the game-show drama; everything around it
+  stays light and calm. Chunky controls with hard shadows that press down. Reduced motion is respected.
 
 See [docs/AI-DLC.md](docs/AI-DLC.md) for the full development life cycle: the brief, two independent
 zero-knowledge playtests by reviewers who had never seen the game, and the team reviews that produced

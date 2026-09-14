@@ -250,18 +250,9 @@ h2 { font-family: var(--display); font-size: clamp(34px, 9vw, 44px); line-height
 .sticky-cta .btn.big { margin-top: 10px; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-/* ---------- wide screens: the ladder sits beside the question, game-show style ---------- */
-.play-side { display: none; }
+/* ---------- wide screens: the same single centred column as the phone ---------- */
 @media (min-width: 900px) {
-  .app { max-width: 980px; }
-  .play-cols { display: grid; grid-template-columns: 1fr 260px; gap: 28px; align-items: start; }
-  .play-side { display: block; position: sticky; top: 92px; }
-  .play-side .ladder { margin: 0; }
-  .intro, .report, .clear { max-width: 560px; }
-  .sheet-inner { max-width: 980px; display: grid; grid-template-columns: 1fr 260px; gap: 28px; align-items: center; }
-  .sheet-inner .btn.big { margin-top: 0; grid-column: 2; grid-row: 1 / span 2; align-self: center; }
-  .verdict { grid-column: 1; }
-  .explain { grid-column: 1; }
+  .app { max-width: 560px; }
 }
 
 @media (max-width: 359px) { .opt { font-size: 15px; padding: 10px 12px; } .qtext { font-size: 19px; } }

@@ -91,24 +91,21 @@ export default function App() {
                 <span className={`tierpill ${stage.tier}`}>{stage.tier}</span>
               </div>
               <p className="qsub">{stage.sub}</p>
-              <div className="play-cols">
-                <div className="play-main">
+              <div className="play-main">
                   <QuestionCard drawn={s.drawn} selected={s.selected} hidden={s.hidden} poll={s.poll}
                     revealed={s.phase === 'reveal'} locking={s.phase === 'locking'} correctIndex={s.drawn.answer}
                     onSelect={(i) => dispatch({ type: 'select', i })} />
                   {s.phase === 'locking' && <p className="locking-note">🔒 Locked in. Let's see…</p>}
-                  {s.phase === 'question' && (
-                    <>
-                      <LifelineBar lifelines={s.lifelines} disabled={false}
-                        onBisect={() => dispatch({ type: 'bisect' })} onAsk={() => dispatch({ type: 'ask' })} onRerun={() => dispatch({ type: 'rerun' })} />
-                      <button className="btn primary big lockbtn" disabled={s.selected === null} onClick={() => { sfx.lock(); dispatch({ type: 'lock' }); }}>
-                        🔒 {s.selected === null ? 'Pick an answer' : 'Lock it in'}
-                      </button>
-                      <p className="fine">One answer. No second chance.</p>
-                    </>
-                  )}
-                </div>
-                <aside className="play-side"><LadderList answers={s.answers} /></aside>
+                {s.phase === 'question' && (
+                  <>
+                    <LifelineBar lifelines={s.lifelines} disabled={false}
+                      onBisect={() => dispatch({ type: 'bisect' })} onAsk={() => dispatch({ type: 'ask' })} onRerun={() => dispatch({ type: 'rerun' })} />
+                    <button className="btn primary big lockbtn" disabled={s.selected === null} onClick={() => { sfx.lock(); dispatch({ type: 'lock' }); }}>
+                      🔒 {s.selected === null ? 'Pick an answer' : 'Lock it in'}
+                    </button>
+                    <p className="fine">One answer. No second chance.</p>
+                  </>
+                )}
               </div>
             </motion.section>
           )}
